@@ -1,0 +1,95 @@
+---
+title: "440 Case Study III Interim Report"
+author: "Group 8: Jake Epstein, Daniel Spottiswood, Michael Tan, Sahil Patel, Man-Lin Hsiao"
+---
+
+
+## Introduction
+
+
+```{r, message=FALSE, echo=FALSE, warning=FALSE}
+## load packages
+library(dplyr)
+library(ggplot2)
+library(MASS)
+library(gridExtra)
+library(quantreg)
+knitr::opts_chunk$set(warning=FALSE, echo=FALSE, eval=TRUE)
+select = dplyr::select
+```
+
+
+```{r}
+## consolidated reading, loading and transforming
+if (!file.exists("births.rds")){
+  ## read in data
+  births = read.csv("data/Yr1116Birth.csv", na.strings = "9999")
+  deaths = read.csv("data/Yr1116Death.csv")
+     
+  ## rewrite NAs
+  births$SEX[which(births$SEX == 9)] = NA
+  births$CIGPN[which(births$CIGPN == 99)] = NA
+  births$CIGFN[which(births$CIGFN == 99)] = NA
+  births$CIGSN[which(births$CIGSN == 99)] = NA
+  births$CIGLN[which(births$CIGLN == 99)] = NA
+  births$PARITY[which(births$PARITY == 99)] = NA
+  births$PLUR[which(births$PLUR == 99)] = NA
+  births$GEST[which(births$GEST == 99)] = NA
+  births$MAGE[which(births$MAGE == 99)] = NA
+  
+  #clean data
+  births$SEX[which(births$SEX == 1)] = "Male"
+  births$SEX[which(births$SEX == 2)] = "Female"
+  
+  births = births %>%
+    mutate(total_smoked = CIGFN+CIGSN+CIGLN) %>%
+    mutate(smoked_during = total_smoked >0)
+  
+  births = births %>%
+    mutate(smoking_type = ifelse(smoked_during, 
+        ifelse(CIGPN > 0, "before and during", "during only"),
+        ifelse(CIGPN > 0, "before only", "none"))) %>%
+    mutate(smoking_type = relevel(as.factor(smoking_type), ref = 4))
+  
+  births$PARITY = as.numeric(births$PARITY)
+  births = births %>% 
+    mutate(PARITY_truncated = ifelse(
+      PARITY > 4, "5+", PARITY)
+    )
+    
+  births$PARITY = as.factor(births$PARITY)
+  births$PARITY_truncated = as.factor(births$PARITY_truncated)
+  
+  births$PLUR = as.numeric(births$PLUR)
+  births = births %>% 
+    mutate(PLUR_truncated = ifelse(PLUR > 2, "3+", PLUR))
+  births$PLUR = as.factor(births$PLUR)
+  births$PLUR_truncated = as.factor(births$PLUR_truncated)
+  
+  births$MRACER = as.numeric(births$MRACER)
+  births$MRACER[births$MHISP != "N"] = "Hispanic"
+  births$MRACER[births$MRACER %in% c(0, 3)] = "Other Non-White"
+  births$MRACER[births$MRACER %in% 4:8] = "Asian"
+  births$MRACER[births$MRACER == 1] = "White"
+  births$MRACER[births$MRACER == 2] = "Black"
+  
+  
+  #calculate infant mortality by county, to use as a proxy for socioconomic status
+  deaths_by_county = deaths %>%
+    group_by(cores) %>%
+    summarize(n_deaths = n()) %>%
+    rename(CORES=cores)
+  
+  births_by_county = births %>%
+    group_by(CORES) %>%
+    summarize(n_births = n())
+  
+  infant_mortality = merge(deaths_by_county, births_by_county, by = "CORES") %>%
+    mutate(mortality = n_deaths/n_births*100) %>% #note: mortality rate is as percentage
+    select(-n_births, -n_deaths)
+  
+  births = merge(births, infant_mortality, by = "CORES")
+  saveRDS(births, "births.rds")
+} else {births = readRDS("births.rds")}
+
+```
