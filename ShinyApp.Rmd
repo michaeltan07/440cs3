@@ -1,0 +1,39 @@
+---
+title: "CS3"
+author: "Daniel Spottiswood"
+date: "10/1/2019"
+output: html_document
+---
+
+Data Transformation/Cleaning
+```{r setup, include=FALSE}
+library(dplyr)
+library(ggplot2)
+births = read.csv("Data/Yr1116Birth.csv", na.strings = "9999")
+deaths = read.csv("Data/Yr1116Death.csv")
+
+births$MRACER = as.numeric(births$MRACER)
+births$MRACER[births$MHISP != "N"] = "Hispanic"
+births$MRACER[births$MRACER %in% c(0, 3, 4, 5, 6, 7, 8)] = "Other Non-White"
+births$MRACER[births$MRACER == 1] = "White"
+births$MRACER[births$MRACER == 2] = "Black"
+
+deaths$race = as.numeric(deaths$race)
+deaths$race[deaths$hisp != "N"] = "Hispanic"
+deaths$race[deaths$race %in% c(3,4)] = "Other Non-White"
+deaths$race[deaths$race == 1] = "White"
+deaths$race[deaths$race == 2] = "Black"
+
+deaths_by_county = deaths %>%
+  group_by(cores, race, year) %>%
+  rename(YOB = year, MRACER = race) %>%
+  summarize(n_deaths = n()) %>%
+  rename(CORES=cores)
+
+births_by_county = births %>%
+  group_by(CORES, MRACER, YOB) %>%
+  summarize(n_births = n())
+
+infant_mortality = merge(deaths_by_county, births_by_county, by=c("CORES", "MRACER", "YOB")) %>%
+  mutate(mortality = n_deaths/n_births*100) # not necessarily accurate as the race of mother doesn't have a 1:1 relationship with race of child.
+```
