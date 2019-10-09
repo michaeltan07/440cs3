@@ -26,15 +26,18 @@ deaths$race[deaths$race == 2] = "Black"
 
 deaths_by_county = deaths %>%
   group_by(cores, race, year) %>%
-  rename(YOB = year, MRACER = race) %>%
-  summarize(n_deaths = n()) %>%
+  rename(YOB = year) %>%
+  summarize(deaths = n()) %>%
   rename(CORES=cores)
 
 births_by_county = births %>%
   group_by(CORES, MRACER, YOB) %>%
-  summarize(n_births = n())
+  rename(race = MRACER) %>%
+  summarize(births = n())
 
-infant_mortality = merge(deaths_by_county, births_by_county, by=c("CORES", "MRACER", "YOB")) %>%
-  mutate(mortality = n_deaths/n_births*100)
+infant_mortality = merge(deaths_by_county, births_by_county, by=c("CORES", "race", "YOB")) %>%
+  mutate(mortality = deaths/births*100)
+
+write.csv(infant_mortality, file = "nc_infant_mortality.csv")
 ```
 
