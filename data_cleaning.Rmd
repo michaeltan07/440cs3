@@ -11,6 +11,7 @@ library(dplyr)
 library(ggplot2)
 births = read.csv("Data/Yr1116Birth.csv", na.strings = "9999")
 deaths = read.csv("Data/Yr1116Death.csv")
+county_mapping = read.csv("Data/county_mapping.csv")
 
 births$MRACER = as.numeric(births$MRACER)
 births$MRACER[births$MHISP != "N"] = "Hispanic"
@@ -34,6 +35,8 @@ births_by_county = births %>%
   group_by(CORES, MRACER, YOB) %>%
   rename(race = MRACER) %>%
   summarize(births = n())
+
+births_by_county = merge(births_by_county, county_mapping, by="CORES")
 
 infant_mortality = merge(deaths_by_county, births_by_county, by=c("CORES", "race", "YOB")) %>%
   mutate(mortality = deaths/births*100)
