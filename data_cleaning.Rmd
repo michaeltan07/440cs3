@@ -35,6 +35,6 @@ births_by_county = births %>%
   summarize(n_births = n())
 
 infant_mortality = merge(deaths_by_county, births_by_county, by=c("CORES", "MRACER", "YOB")) %>%
-  mutate(mortality = n_deaths/n_births*100) # not necessarily accurate as the race of mother doesn't have a 1:1 relationship with race of child.
+  mutate(mortality = n_deaths/n_births*100)
 ```
 
