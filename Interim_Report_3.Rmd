@@ -1,0 +1,19 @@
+---
+title: 'Case Study III: Infant Mortality in North Carolina'
+author: 'Group 8: Jake Epstein, Daniel Spottiswood, Sahil Patel, Man-Lin Hsiao, Michael
+  Tan'
+date: "10/9/2019"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+
+### Interim Report I: Vizualizing Infant Mortality in North Carolina
+
+  For this report, we created a tableau dashboard to visualize infant mortality rates in North Carolina by county and race. The main feature of the dashboard is an interactive bubble map of the state. The size of each bubble corresponds to the number of births in each county, and the color of the bubble corresponds to the infant mortality rate in each county. Darker bubbles indicate a county has a higher infant mortality rate. On the right side of the dashboard there is a barchart that shows breakdown by race and a line graph showing the trend of births over time. These charts can also be used as a filter to subset the map by race or year.
+
+</br>
+</br>
+
+  One interesting observation one can make from this visualization is that infant mortality rates are much higher for non-white babies than white babies. Furthermore, smaller counties, that is to say counties with fewer births, tend to have higher infant mortality rates. This could be a result of diminshed access to medical care or increased poverty, however more analysis is necessary to explore this further.

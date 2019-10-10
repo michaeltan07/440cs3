@@ -631,8 +631,8 @@
         <devicelayout auto-generated='true' name='Phone'>
           <size maxheight='1000' minheight='1000' sizing-mode='vscroll' />
           <zones>
-            <zone h='100000' id='16' type='layout-basic' w='100000' x='0' y='0'>
-              <zone h='98000' id='17' param='vert' type='layout-flow' w='98666' x='667' y='1000'>
+            <zone h='100000' id='18' type='layout-basic' w='100000' x='0' y='0'>
+              <zone h='98000' id='19' param='vert' type='layout-flow' w='98666' x='667' y='1000'>
                 <zone fixed-size='280' h='98000' id='3' is-fixed='true' name='County Map' w='70333' x='667' y='1000'>
                   <zone-style>
                     <format attr='border-color' value='#000000' />
@@ -693,7 +693,7 @@
     </dashboard>
   </dashboards>
   <windows source-height='30'>
-    <window class='worksheet' name='County Map'>
+    <window class='worksheet' maximized='true' name='County Map'>
       <cards>
         <edge name='left'>
           <strip size='160'>
@@ -867,7 +867,7 @@
       </viewpoint>
       <simple-id uuid='{47896E61-300E-45D3-8D1E-26C610C56A62}' />
     </window>
-    <window class='dashboard' maximized='true' name='Dashboard'>
+    <window class='dashboard' name='Dashboard'>
       <viewpoints>
         <viewpoint name='Births by Race'>
           <zoom type='entire-view' />
@@ -882,7 +882,7 @@
           </highlight>
         </viewpoint>
       </viewpoints>
-      <active id='10' />
+      <active id='3' />
       <simple-id uuid='{7C8A4306-3AD4-41F7-852D-78571D6EAF18}' />
     </window>
   </windows>
