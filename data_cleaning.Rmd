@@ -39,7 +39,7 @@ births_by_county = births %>%
 births_by_county = merge(births_by_county, county_mapping, by="CORES")
 
 infant_mortality = merge(deaths_by_county, births_by_county, by=c("CORES", "race", "YOB")) %>%
-  mutate(mortality = deaths/births*100)
+  mutate(mortality = deaths/births*1000)
 
 write.csv(infant_mortality, file = "nc_infant_mortality.csv")
 ```
