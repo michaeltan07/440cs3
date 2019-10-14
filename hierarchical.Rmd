@@ -2,92 +2,79 @@
 title: "model"
 output: html_document
 ---
-
 ```{r}
-df <- read.csv(file="nc_births_all_mapped.csv", header=TRUE, sep=",")
-View(df)
-```
-
-```{r}
-attach(df)
 library(lme4)
 library(dplyr)
-M1 <- lmer(mortality~(1|race)+(1|COUNTY))
-summary(M1)
-coef(M1)
+library(ggplot2)
 ```
 
 ```{r}
-## consolidated reading, loading and transforming
+nc_births.df <- read.csv(file="nc_births_all_mapped.csv", header=TRUE, sep=",")
+nc_births.df <- nc_births.df %>%
+  filter(YOB == "2015")
 
-  births = read.csv("Data/Yr1116Birth.csv", na.strings = "9999")
-  deaths = read.csv("Data/Yr1116Death.csv")
-  county_mapping = read.csv("Data/county_mapping.csv")
-     
-  ## rewrite NAs
-  births$SEX[which(births$SEX == 9)] = NA
-  births$CIGPN[which(births$CIGPN == 99)] = NA
-  births$CIGFN[which(births$CIGFN == 99)] = NA
-  births$CIGSN[which(births$CIGSN == 99)] = NA
-  births$CIGLN[which(births$CIGLN == 99)] = NA
-  births$PARITY[which(births$PARITY == 99)] = NA
-  births$PLUR[which(births$PLUR == 99)] = NA
-  births$GEST[which(births$GEST == 99)] = NA
-  births$MAGE[which(births$MAGE == 99)] = NA
-  
-  #clean data
-  births$SEX[which(births$SEX == 1)] = "Male"
-  births$SEX[which(births$SEX == 2)] = "Female"
-  
-  births = births %>%
-    mutate(total_smoked = CIGFN+CIGSN+CIGLN) %>%
-    mutate(smoked_during = total_smoked >0)
-  
-  births = births %>%
-    mutate(smoking_type = ifelse(smoked_during, 
-        ifelse(CIGPN > 0, "before and during", "during only"),
-        ifelse(CIGPN > 0, "before only", "none"))) %>%
-    mutate(smoking_type = relevel(as.factor(smoking_type), ref = 4))
-  
-  births$PARITY = as.numeric(births$PARITY)
-  births = births %>% 
-    mutate(PARITY_truncated = ifelse(
-      PARITY > 4, "5+", PARITY)
-    )
-    
-  births$PARITY = as.factor(births$PARITY)
-  births$PARITY_truncated = as.factor(births$PARITY_truncated)
-  
-  births$PLUR = as.numeric(births$PLUR)
-  births = births %>% 
-    mutate(PLUR_truncated = ifelse(PLUR > 2, "3+", PLUR))
-  births$PLUR = as.factor(births$PLUR)
-  births$PLUR_truncated = as.factor(births$PLUR_truncated)
-  
-  births$MRACER = as.numeric(births$MRACER)
-  births$MRACER[births$MHISP != "N"] = "Hispanic"
-  births$MRACER[births$MRACER %in% c(0, 3)] = "Other Non-White"
-  births$MRACER[births$MRACER %in% 4:8] = "Asian"
-  births$MRACER[births$MRACER == 1] = "White"
-  births$MRACER[births$MRACER == 2] = "Black"
-  
-  
-  #calculate infant mortality by county, to use as a proxy for socioconomic status
-  deaths_by_county = deaths %>%
-    group_by(cores) %>%
-    summarize(n_deaths = n()) %>%
-    rename(CORES=cores)
-  
-  births_by_county = births %>%
-    group_by(CORES) %>%
-    summarize(n_births = n())
-  
-  infant_mortality = merge(deaths_by_county, births_by_county, by = "CORES") %>%
-    mutate(mortality = n_deaths/n_births*1000) %>% #note: mortality rate is as percentage
-    select(-n_births, -n_deaths)
-  
-  births = merge(births, infant_mortality, by = "CORES")
-  
-  births_mapped = merge(births, county_mapping, by = "CORES")
-  View(births_mapped)
+#remove erroneous data entries
+nc_births.df$mortality[which(nc_births.df$mortality > 100)] = NA
+View(nc_births.df)
 ```
+
+##EDA
+```{r}
+ggplot(nc_births.df, aes(x=race, y=deaths, fill=race)) + geom_boxplot()
+ggplot(nc_births.df, aes(x=race, y=mortality, fill=race)) + geom_boxplot()
+
+ggplot(nc_births.df, aes(x=COUNTY, y=deaths,group=COUNTY))+
+  geom_boxplot(notch=FALSE, outlier.shape=NA, fill="red", alpha=0.2) +
+  theme(text = element_text(size=5), axis.text.x = element_text(angle = 90, hjust = 1))
+
+ggplot(nc_births.df, aes(x=COUNTY, y=mortality,group=COUNTY))+
+  geom_boxplot(notch=FALSE, outlier.shape=NA, fill="red", alpha=0.2) +
+  theme(text = element_text(size=5), axis.text.x = element_text(angle = 90, hjust = 1))
+
+```
+
+
+##Model
+```{r}
+attach(nc_births.df)
+model_deaths <- lmer(deaths ~ race + (1|COUNTY))
+model_mortality <- lmer(mortality ~ race + (1|COUNTY))
+summary(M1)
+coef(M1)
+
+
+
+    ggplot(tempEf,aes(TRTYEAR, r, group=interaction(site, Myc), col=site, shape=Myc )) + 
+      facet_grid(~N) +
+      geom_line(aes(y=fit, lty=Myc), size=0.8) +
+      geom_point(alpha = 0.3) + 
+      geom_hline(yintercept=0, linetype="dashed") +
+      theme_bw()
+```
+
+```{r}
+# including x as a predictor
+
+M1 <- lmer (y ~ x + (1 | county))
+display (M1)
+options (digits=2)
+a.hat.M1 <- fixef(M1)[1] + ranef(M1)$county #coef(M1)[[1]]["(Intercept)"]
+b.hat.M1 <- fixef(M1)[2]
+
+# make the graphs
+
+postscript ("c:/books/multilevel/radon3.ps", height=4.5, horizontal=T)
+par (mfrow=c(2,4), mar=c(4,4,3,1), oma=c(1,1,2,1))
+for (j in display8){
+  plot (x.jitter[county==j], y[county==j], xlim=c(-.05,1.05), ylim=y.range,
+    xlab="floor", ylab="log radon level", cex.lab=1.6, cex.axis=1.5,
+    pch=20, mgp=c(2,.7,0), xaxt="n", yaxt="n", cex.main=1.3, main=uniq[j])
+  axis (1, c(0,1), mgp=c(2,.7,0), cex.axis=1.5)
+  axis (2, seq(-1,3,2), mgp=c(2,.7,0), cex.axis=1.5)
+  curve (coef(lm.pooled)[1] + coef(lm.pooled)[2]*x, lwd=.5, lty=2, col="gray10", add=TRUE)
+  curve (coef(lm.unpooled)[j+1] + coef(lm.unpooled)[1]*x, lwd=.5, col="gray10", add=TRUE)
+  curve (a.hat.M1[j,] + b.hat.M1*x, lwd=1, col="black", add=TRUE)
+}
+dev.off()
+```
+
