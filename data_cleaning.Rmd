@@ -44,3 +44,52 @@ infant_mortality = merge(deaths_by_county, births_by_county, by=c("CORES", "race
 write.csv(infant_mortality, file = "nc_infant_mortality.csv")
 ```
 
+
+
+```{r}
+## rewrite NAs
+  births$SEX[which(births$SEX == 9)] = NA
+  births$CIGPN[which(births$CIGPN == 99)] = NA
+  births$CIGFN[which(births$CIGFN == 99)] = NA
+  births$CIGSN[which(births$CIGSN == 99)] = NA
+  births$CIGLN[which(births$CIGLN == 99)] = NA
+  births$PARITY[which(births$PARITY == 99)] = NA
+  births$PLUR[which(births$PLUR == 99)] = NA
+  births$GEST[which(births$GEST == 99)] = NA
+  births$MAGE[which(births$MAGE == 99)] = NA
+  
+  #clean data
+  births$SEX[which(births$SEX == 1)] = "Male"
+  births$SEX[which(births$SEX == 2)] = "Female"
+  
+  births = births %>%
+    mutate(total_smoked = CIGFN+CIGSN+CIGLN) %>%
+    mutate(smoked_during = total_smoked >0)
+  
+  births = births %>%
+    mutate(smoking_type = ifelse(smoked_during, 
+        ifelse(CIGPN > 0, "before and during", "during only"),
+        ifelse(CIGPN > 0, "before only", "none"))) %>%
+    mutate(smoking_type = relevel(as.factor(smoking_type), ref = 4))
+  
+  births$PARITY = as.numeric(births$PARITY)
+  births = births %>% 
+    mutate(PARITY_truncated = ifelse(
+      PARITY > 4, "5+", PARITY)
+    )
+    
+  births$PARITY = as.factor(births$PARITY)
+  births$PARITY_truncated = as.factor(births$PARITY_truncated)
+  
+  births$PLUR = as.numeric(births$PLUR)
+  births = births %>% 
+    mutate(PLUR_truncated = ifelse(PLUR > 2, "3+", PLUR))
+  births$PLUR = as.factor(births$PLUR)
+  births$PLUR_truncated = as.factor(births$PLUR_truncated)
+  
+  
+  births = births %>% 
+    rename(race = MRACER)
+  
+  births_all_mapped = merge(births, infant_mortality, by = c("CORES", "YOB", "race"))
+```
