@@ -2,13 +2,15 @@
 title: "model"
 output: html_document
 ---
-```{r}
-library(lme4)
-library(dplyr)
-library(ggplot2)
+```{r,include=FALSE}
+require(lme4)
+require(dplyr)
+require(ggplot2)
+require(tidyverse)
 ```
 
-```{r}
+MT:
+```{r,include=FALSE,eval=FALSE}
 nc_births.df <- read.csv(file="nc_births_all_mapped.csv", header=TRUE, sep=",")
 nc_births.df <- nc_births.df %>%
   filter(YOB == "2015")
@@ -18,41 +20,130 @@ nc_births.df$mortality[which(nc_births.df$mortality > 100)] = NA
 View(nc_births.df)
 ```
 
-##EDA
-```{r}
-ggplot(nc_births.df, aes(x=race, y=deaths, fill=race)) + geom_boxplot()
-ggplot(nc_births.df, aes(x=race, y=mortality, fill=race)) + geom_boxplot()
-
-ggplot(nc_births.df, aes(x=COUNTY, y=deaths,group=COUNTY))+
-  geom_boxplot(notch=FALSE, outlier.shape=NA, fill="red", alpha=0.2) +
-  theme(text = element_text(size=5), axis.text.x = element_text(angle = 90, hjust = 1))
-
-ggplot(nc_births.df, aes(x=COUNTY, y=mortality,group=COUNTY))+
-  geom_boxplot(notch=FALSE, outlier.shape=NA, fill="red", alpha=0.2) +
-  theme(text = element_text(size=5), axis.text.x = element_text(angle = 90, hjust = 1))
-
+```{r,echo=FALSE}
+#Clean data
+nc=read.csv("nc_infant_mortality.csv")
+nc=nc[2:8]
+nc$mortality[which(nc$mortality>100)]=NA
+nc$YOB=as.factor(nc$YOB)
+colnames(nc)[colnames(nc)=="COUNTY"]="county"
 ```
 
+##EDA
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+#Shows temporal effect is fixed
+ggplot(nc,aes(x=mortality))+
+  geom_density(aes(fill=YOB),alpha=0.5)+
+  labs(fill="YOB")
+```
+In order to determine whether it was important to allow variation by year in the model, we plotted the distribution of mortality in each year. Comparing these yearly results shows that across time, the distribution of mortality remains approximately constant. Therefore, we will not allow for account for the effect of time on mortality across all counties and races.
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+#Shows that county effects are random
+ggplot(nc,aes(x=county,y=deaths,group=county))+
+  geom_boxplot(notch=FALSE,outlier.shape=NA,fill="red",alpha=0.2)+
+  theme(text=element_text(size=5),axis.text.x=element_text(angle=90,hjust=1))
+
+ggplot(nc,aes(x=county,y=mortality,group=county))+
+  geom_boxplot(notch=FALSE,outlier.shape=NA,fill="red",alpha=0.2)+
+  theme(text=element_text(size=5),axis.text.x=element_text(angle=90,hjust= 1))
+
+eda=aggregate(nc,by=list(county=nc$county,race=nc$race),mean)
+eda=eda%>%
+  discard(~all(is.na(.x)))%>%
+  map_df(~.x)
+county_mean=eda%>%
+  group_by(county)%>%
+  summarise(county_mean=mean(mortality,na.rm=TRUE))
+ggplot(county_mean,aes(x=county,y=county_mean))+
+  geom_bar(stat="identity")+
+  theme(text=element_text(size=5),axis.text.x=element_text(angle=90,hjust= 1))
+
+```
+The boxplots illustrate that the absolute number of deaths and relative number of deaths convey very different information per county. This emphasises that there is a high degree of variation in mortality within each county, and across counties. Furthermore, the bar graph shows that the average mortality by county (across all races) also varies greatly. Therefore, we will allow for random effects for each county.
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+#Shows that race effects are random
+ggplot(nc,aes(x=race,y=deaths,fill=race))+
+  geom_boxplot()
+
+ggplot(nc,aes(x=race,y=mortality,fill=race))+
+  geom_boxplot()
+
+eda=eda%>%
+  inner_join(county_mean)%>%
+  mutate(diff=mortality-county_mean)
+ggplot(eda,aes(x=county,y=diff,colour=race))+
+  geom_point()+
+  geom_hline(yintercept=0,linetype="dashed")+
+  theme(text=element_text(size=5),axis.text.x=element_text(angle=90,hjust= 1))
+```
+The boxplots demonstrate that the distributions of both deaths and mortality vary by race. Additonally, the scatter plot portrays the distance from the county mean for the average mortality per race in a county. This plot shows that mortality by race varies by county. Therefore, we will allow for random effects by race in our model.
 
 ##Model
-```{r}
-attach(nc_births.df)
-model_deaths <- lmer(deaths ~ race + (1|COUNTY))
-model_mortality <- lmer(mortality ~ race + (1|COUNTY))
-summary(M1)
-coef(M1)
+```{r,message=FALSE,warning=FALSE}
+attach(nc)
 
+model_deaths=lmer(deaths~(1+race|county))
+summary(model_deaths)
+coef(model_deaths)
 
-
-    ggplot(tempEf,aes(TRTYEAR, r, group=interaction(site, Myc), col=site, shape=Myc )) + 
-      facet_grid(~N) +
-      geom_line(aes(y=fit, lty=Myc), size=0.8) +
-      geom_point(alpha = 0.3) + 
-      geom_hline(yintercept=0, linetype="dashed") +
-      theme_bw()
+model_mortality=lmer(mortality~(1+race|county))
+summary(model_mortality)
+coef(model_mortality)
 ```
 
-```{r}
+##Table Comparison
+```{r,echo=FALSE,}
+death_table=coef(model_deaths)[[1]]
+colnames(death_table)[colnames(death_table)=="raceHispanic"]="hispanic"
+colnames(death_table)[colnames(death_table)=="raceOther Non-White"]="other"
+colnames(death_table)[colnames(death_table)=="raceWhite"]="white"
+colnames(death_table)[colnames(death_table)=="(Intercept)"]="intercept"
+death_table=death_table%>%
+  mutate(county=as.list(levels(nc$county)))
+death_table=death_table%>%
+  mutate(B_deaths=intercept)
+death_table=death_table%>%
+  mutate(H_deaths=intercept+hispanic)
+death_table=death_table%>%
+  mutate(O_deaths=intercept+other)
+death_table=death_table%>%
+  mutate(W_deaths=intercept+white)
+death_table=death_table[5:9]
+
+mortality_table=coef(model_mortality)[[1]]
+colnames(mortality_table)[colnames(mortality_table)=="raceHispanic"]="hispanic"
+colnames(mortality_table)[colnames(mortality_table)=="raceOther Non-White"]="other"
+colnames(mortality_table)[colnames(mortality_table)=="raceWhite"]="white"
+colnames(mortality_table)[colnames(mortality_table)=="(Intercept)"]="intercept"
+mortality_table=mortality_table%>%
+  mutate(county=as.list(levels(nc$county)))
+mortality_table=mortality_table%>%
+  mutate(B_mortality=intercept)
+mortality_table=mortality_table%>%
+  mutate(H_mortality=intercept+hispanic)
+mortality_table=mortality_table%>%
+  mutate(O_mortality=intercept+other)
+mortality_table=mortality_table%>%
+  mutate(W_mortality=intercept+white)
+mortality_table=mortality_table[5:9]
+
+death_table=as.data.frame(death_table)
+mortality_table=as.data.frame(mortality_table)
+#join is not working...
+#table=inner_join(death_table,mortality_table,by=c("county"="county"))
+```
+
+MT:
+```{r,include=FALSE,eval=FALSE}
+ggplot(tempEf,aes(TRTYEAR, r, group=interaction(site, Myc), col=site, shape=Myc )) +
+  facet_grid(~N) +
+  geom_line(aes(y=fit, lty=Myc), size=0.8) +
+  geom_point(alpha = 0.3) + 
+  geom_hline(yintercept=0, linetype="dashed") +
+  theme_bw()
+
 # including x as a predictor
 
 M1 <- lmer (y ~ x + (1 | county))
