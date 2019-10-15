@@ -58,7 +58,6 @@ county_mean=eda%>%
 ggplot(county_mean,aes(x=county,y=county_mean))+
   geom_bar(stat="identity")+
   theme(text=element_text(size=5),axis.text.x=element_text(angle=90,hjust= 1))
-
 ```
 The boxplots illustrate that the absolute number of deaths and relative number of deaths convey very different information per county. This emphasises that there is a high degree of variation in mortality within each county, and across counties. Furthermore, the bar graph shows that the average mortality by county (across all races) also varies greatly. Therefore, we will allow for random effects for each county.
 
@@ -142,6 +141,5 @@ mortality_table <- mortality_table %>%
 table = inner_join(mortality_table, death_table ,by ="county")
 
 View(table)
-
 ```
 
