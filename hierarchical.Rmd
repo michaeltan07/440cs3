@@ -129,25 +129,19 @@ mortality_table=mortality_table[5:9]
 
 death_table=as.data.frame(death_table)
 mortality_table=as.data.frame(mortality_table)
-
+View(death_table)
 
 #fix the dfs so they are join compatible
-matchColClasses <- function(df1, df2) {
+death_table <- death_table %>%  
+    mutate(county = as.character(county))
 
-  sharedColNames <- names(df1)[names(df1) %in% names(df2)]
-  sharedColTypes <- sapply(df1[,sharedColNames], class)
-
-  for (n in sharedColNames) {
-     class(df2[, n]) <- sharedColTypes[n]
-  }
-
-  return(df2)
-}
+mortality_table <- mortality_table %>%  
+    mutate(county = as.character(county))
 
 
+table = inner_join(mortality_table, death_table ,by ="county")
 
-table = inner_join(matchColClasses(mortality_table, death_table), matchColClasses(death_table, mortality_table) ,by ="county")
-
+View(table)
 
 ```
 
