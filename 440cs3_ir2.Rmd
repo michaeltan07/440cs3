@@ -44,24 +44,17 @@ SCHS_Table_2015 = mortality %>%
   mutate(smallSample = deaths < 10) %>%
   select(-deaths, -smallSample) %>%
   spread(race, mortality)
-```
 
-### EDA
-```{r, echo=FALSE}
-#Median income
-
-#Low birth weight
-
-#Percent Smoke
 
 ```
+
 
 ```{r}
 mortality = mortality %>%
   mutate(mortality_rate = mortality / 1000, race = relevel(race, "White")) %>%
   mutate(Median_Household_Income = Median_Household_Income / 1000)
 
-model = glmer(data = mortality, weights = births, formula = mortality_rate ~ (1|COUNTY) + (1|race) + Median_Household_Income + pctLowBirthWeight + pctSmokers, family = binomial())
+model = glmer(data = mortality, weights = births, formula = mortality_rate ~ (1|COUNTY) + (1|race) + Median_Household_Income + pctLowBirthWeight, family = binomial())
 
 summary(model)
 plot_model(model)
@@ -106,6 +99,8 @@ comparisons = merge(comparisons, mortality %>% filter(YOB == 2015))
 
 comparisons = comparisons %>%
   mutate(difference = mortality - predicted_mortality)
+
+write.csv(comparisons, "comparisons.csv")
 
 ggplot(comparisons, aes(x = predicted_mortality, y = mortality)) +
   geom_point() +
