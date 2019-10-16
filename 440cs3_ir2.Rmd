@@ -71,8 +71,8 @@ plot_model(model, type = "est")
 ```{r}
 mortality_fitted = mortality
 mortality_fitted$fitted.values = fitted(model)
-  
-  
+
+
 our_table = mortality_fitted %>%
   filter(YOB == 2015) %>%
   select(fitted.values, race, COUNTY) %>%
