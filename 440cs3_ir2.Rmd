@@ -36,7 +36,6 @@ mortality = merge(mortality , demos.clean, by = "COUNTY")
 
 ```{r}
 # replicate 2015 SCHS table exactly
-
 SCHS_Table_2015 = mortality %>%
   mutate(race = relevel(race, "White")) %>%
   filter(YOB == 2015) %>%
@@ -49,10 +48,19 @@ SCHS_Table_2015 = mortality %>%
 ### EDA
 ```{r, echo=FALSE}
 #Median income
+ggplot(mortality)+
+  aes(x=Median_Household_Income,y=mortality_rate)+
+  geom_point()
 
 #Low birth weight
+ggplot(mortality)+
+  aes(x=pctLowBirthWeight,y=mortality_rate)+
+   geom_point()
 
 #Percent Smoke
+ggplot(mortality)+
+  aes(x=pctSmokers,y=mortality_rate)+
+  geom_point()
 
 ```
 
