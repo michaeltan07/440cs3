@@ -10,12 +10,16 @@ library(dplyr)
 library(ggplot2)
 library(stringr)
 library(tidyr)
+library(lme4)
+library(sjPlot)
+library(brms)
+
+select = dplyr::select
 ```
 
 ```{r}
 #read in mortality
 mortality = read.csv("nc_infant_mortality.csv") %>%
-  select(-X) %>%
   mutate(COUNTY = str_remove_all(COUNTY, " "))
 
 mortality$COUNTY[which(mortality$COUNTY == "McDOWELL")] = "MCDOWELL"
@@ -28,23 +32,95 @@ GDP.clean <- GDP %>%
   filter(Postal == "NC") %>%
   rename(GDP2015 = X2015) %>%
   filter(IndustryName == "All Industries") %>%
-  select(Countyname, GDP2015) %>%
+  dplyr::select(Countyname, GDP2015) %>%
   rename(COUNTY = Countyname) 
 
 GDP.clean$COUNTY = toupper(GDP.clean$COUNTY) %>%
   str_remove_all(" ")
 
 mortality = merge(mortality , GDP.clean, by = "COUNTY")
+
+
+# merge with Cancer data
+
+cancer = read.csv(file = "Data/CD13B Cancer Projections by County.csv")
+cancer.clean = cancer %>%
+  select(COUNTY, NewCancer, CancerDeaths)
+
+cancer.clean$COUNTY = toupper(cancer.clean$COUNTY) %>%
+  str_remove_all(" ")
+
+
+mortality = merge(mortality , cancer.clean, by = "COUNTY")
+
+mortality = mortality %>%
+  mutate(GDP2015 = as.numeric(as.character(GDP2015)) / 1e6) %>%
+  mutate(CancerDeaths = as.numeric(as.character(CancerDeaths))) %>%
+  mutate(NewCancer = as.numeric(as.character(NewCancer)))
+
+
 ```
 
 
 ```{r}
-# replicate table exactly
+# replicate 2015 SCHS table exactly
 
-table = mortality %>%
+SCHS_Table_2015 = mortality %>%
   filter(YOB == 2015) %>%
   select(mortality, race, COUNTY, deaths) %>%
   mutate(smallSample = deaths < 10) %>%
   select(-deaths, -smallSample) %>%
   spread(race, mortality)
 ```
+
+
+```{r}
+mortality2015 = mortality %>%
+  mutate(mortality_rate = mortality / 1000, race = relevel(race, "White")) %>%
+  filter(YOB == 2015) %>%
+  mutate(county.lab = factor(COUNTY, levels = 1:length(unique(COUNTY)), labels = unique(COUNTY)))
+
+
+initial_model = glmer(data = mortality2015, weights = births, formula = mortality_rate ~ (1 | COUNTY) + race  + GDP2015, family = binomial())
+
+summary(initial_model)
+
+plot_model(initial_model)
+
+plot_model(initial_model, type = "est")
+
+plot_model(initial_model, type = "pred", terms = c("GDP2015", "race")) +
+  xlab("2015 GDP ($millions)") +
+  ylab("Predicted Mortality Rate") +
+  theme_minimal()
+
+plot_model(initial_model, type = "re")
+
+coef(initial_model)
+
+## try to disaggregate (same results)
+
+model_input = mortality2015 %>%
+  select(-X) %>%
+  mutate(survivors = births - deaths) %>%
+  gather("count", "quantity", c(5, 13)) %>%
+  uncount(quantity) %>%
+  mutate("died" = as.numeric(count=="deaths"))
+
+
+model2 = glmer(data = model_input, formula = died ~ (1 | COUNTY) + race  + GDP2015, family = binomial())
+
+plot_model(model2)
+
+plot_model(model2, type = "est")
+
+plot_model(model2, type = "re")
+
+coef(model2)
+```
+
+
+
+
+
+
