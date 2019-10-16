@@ -97,6 +97,7 @@ plot_model(model, type = "est")
 
 
 ```
+These charts show the differing intercepts for the differing counties and races. 
 
 
 
@@ -132,12 +133,7 @@ comparisons = merge(comparisons, mortality %>% filter(YOB == 2015))
 comparisons = comparisons %>%
   mutate(difference = mortality - predicted_mortality)
 
-ggplot(comparisons, aes(x = predicted_mortality, y = mortality)) +
-  geom_point() +
-  geom_abline(slope = 1, intercept = 0) +
-  xlab ("Predicted Values") +
-  ylab ("Reported Values") +
-  theme_minimal()
+write.csv(comparisons, "comparisons.csv")
 
 ggplot(comparisons, aes(x = predicted_mortality, y = mortality)) +
   geom_point() +
@@ -153,9 +149,8 @@ ggplot(comparisons, aes(x = births, y = difference)) +
   xlab("Number of Births") +
   ylab("Difference in Predicted vs Reported Mortalities") +
   theme_minimal()
-
-
 ```
+We see that our predictions do a strong job of estimating the reported values, and are centered around a slope of 1, so there is no clear bias The large residual points are mostly indicative of reported values that draw on a small quantity of data points. We must note that there are some points that lie outside of this graph, but again are mostly caused by a lack of data. This is demonstrated in the third chart that shows that as the number of births increase our predictions converge with the sample means.
 
 
 
