@@ -5,3 +5,46 @@ date: "10/16/2019"
 output: html_document
 ---
 
+```{r}
+library(dplyr)
+library(ggplot2)
+library(stringr)
+library(tidyr)
+```
+
+```{r}
+#read in mortality
+mortality = read.csv("nc_infant_mortality.csv") %>%
+  select(-X) %>%
+  mutate(COUNTY = str_remove_all(COUNTY, " "))
+
+mortality$COUNTY[which(mortality$COUNTY == "McDOWELL")] = "MCDOWELL"
+mortality$COUNTY[which(mortality$COUNTY == "TYRELL")] = "TYRRELL"
+
+
+# merge with GDP Data
+GDP = read.csv(file = "Data/GCP_Release_1.csv")
+GDP.clean <- GDP %>%
+  filter(Postal == "NC") %>%
+  rename(GDP2015 = X2015) %>%
+  filter(IndustryName == "All Industries") %>%
+  select(Countyname, GDP2015) %>%
+  rename(COUNTY = Countyname) 
+
+GDP.clean$COUNTY = toupper(GDP.clean$COUNTY) %>%
+  str_remove_all(" ")
+
+mortality = merge(mortality , GDP.clean, by = "COUNTY")
+```
+
+
+```{r}
+# replicate table exactly
+
+table = mortality %>%
+  filter(YOB == 2015) %>%
+  select(mortality, race, COUNTY, deaths) %>%
+  mutate(smallSample = deaths < 10) %>%
+  select(-deaths, -smallSample) %>%
+  spread(race, mortality)
+```
