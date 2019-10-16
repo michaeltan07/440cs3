@@ -44,15 +44,15 @@ SCHS_Table_2015 = mortality %>%
   mutate(smallSample = deaths < 10) %>%
   select(-deaths, -smallSample) %>%
   spread(race, mortality)
-
-
 ```
 
 ### EDA
 ```{r, echo=FALSE}
-#Income
+#Median income
 
 #Low birth weight
+
+#Percent Smoke
 
 ```
 
