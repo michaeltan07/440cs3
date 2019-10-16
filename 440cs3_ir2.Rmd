@@ -26,45 +26,11 @@ mortality = read.csv("nc_infant_mortality.csv") %>%
 mortality$COUNTY[which(mortality$COUNTY == "McDOWELL")] = "MCDOWELL"
 mortality$COUNTY[which(mortality$COUNTY == "TYRELL")] = "TYRRELL"
 
+demos = read.csv("Data/County_Demo_Data.csv")
+demos.clean = demos %>%
+  mutate(COUNTY = toupper(COUNTY) %>% str_remove_all(" "))
 
-# merge with GDP Data
-GDP = read.csv(file = "Data/GCP_Release_1.csv")
-GDP.clean <- GDP %>%
-  filter(Postal == "NC") %>%
-  rename(GDP2015 = X2015) %>%
-  filter(IndustryName == "All Industries") %>%
-  dplyr::select(Countyname, GDP2015) %>%
-  rename(COUNTY = Countyname) 
-
-GDP.clean$COUNTY = toupper(GDP.clean$COUNTY) %>%
-  str_remove_all(" ")
-
-mortality = merge(mortality , GDP.clean, by = "COUNTY")
-
-
-# merge with Cancer data
-
-cancer = read.csv(file = "Data/CD13B Cancer Projections by County.csv")
-cancer.clean = cancer %>%
-  select(COUNTY, NewCancer, CancerDeaths)
-
-cancer.clean$COUNTY = toupper(cancer.clean$COUNTY) %>%
-  str_remove_all(" ")
-
-
-mortality = merge(mortality , cancer.clean, by = "COUNTY")
-
-mortality = mortality %>%
-  mutate(GDP2015 = as.numeric(as.character(GDP2015)) / 1e6) %>%
-  mutate(CancerDeaths = as.numeric(as.character(CancerDeaths))) %>%
-  mutate(NewCancer = as.numeric(as.character(NewCancer)))
-
-GDP_per_birth = mortality %>%
-  group_by(COUNTY) %>%
-  summarize(GDP_per_birth = mean(GDP2015) / sum(births))
-
-mortality = merge(mortality, GDP_per_birth, by = "COUNTY")
-
+mortality = merge(mortality , demos.clean, by = "COUNTY")
 ```
 
 
@@ -84,45 +50,18 @@ SCHS_Table_2015 = mortality %>%
 
 
 ```{r}
-mortality2015 = mortality %>%
+mortality = mortality %>%
   mutate(mortality_rate = mortality / 1000, race = relevel(race, "White")) %>%
-  filter(YOB == 2015)
+  mutate(Median_Household_Income = Median_Household_Income / 1000)
 
+model = glmer(data = mortality, weights = births, formula = mortality_rate ~ (1|COUNTY) + (1|race) + Median_Household_Income + pctLowBirthWeight, family = binomial())
 
-initial_model = glmer(data = mortality2015, weights = births, formula = mortality_rate ~ (1|COUNTY) + race  + GDP_per_birth, family = binomial())
+summary(model)
+plot_model(model)
 
-summary(initial_model)
+plot_model(model, type = "re") 
+plot_model(model, type = "est") 
 
-plot_model(initial_model)
-
-plot_model(initial_model, type = "est")
-
-plot_model(initial_model, type = "pred", terms = c("GDP_per_birth", "race")) +
-  xlab("2015 GDP Per Birth ($thousands)") +
-  ylab("Predicted Mortality Rate") +
-  theme_minimal()
-
-plot_model(initial_model, type = "re")
-
-coef(initial_model)
-
-## try to disaggregate (same results)
-
-# model_input = mortality2015 %>%
-#   select(-X) %>%
-#   mutate(survivors = births - deaths) %>%
-#   gather("count", "quantity", c(5, 13)) %>%
-#   uncount(quantity) %>%
-#   mutate("died" = as.numeric(count=="deaths"))
-# 
-# 
-# model2 = glmer(data = model_input, formula = died ~ (1|COUNTY) + race  + GDP2015, family = binomial())
-
-
-logistic = glm(data = mortality2015, weights = births, formula = mortality_rate ~ race  + GDP2015, family = binomial())
-
-summary(logistic)
-plot_model(logistic)
 
 ```
 
@@ -130,10 +69,12 @@ plot_model(logistic)
 
 ### Compare our fitted values to the predictions from the schs table
 ```{r}
-mortality_fitted = mortality2015
-mortality_fitted$fitted.values = logistic$fitted.values
-
+mortality_fitted = mortality
+mortality_fitted$fitted.values = fitted(model)
+  
+  
 our_table = mortality_fitted %>%
+  filter(YOB == 2015) %>%
   select(fitted.values, race, COUNTY) %>%
   mutate(predicted_mortality = 1000*fitted.values) %>%
   select(-fitted.values) %>%
@@ -153,19 +94,19 @@ table_comparisons = merge(our_table, SCHS_Table_2015, by = "COUNTY")
 
 comparisons = merge(our_table_as_list, schs_table_as_list, by = c("race", "COUNTY"))
 
+comparisons = merge(comparisons, mortality %>% filter(YOB == 2015))
+
 comparisons = comparisons %>%
   mutate(difference = mortality - predicted_mortality)
 
-comparisons = merge(comparisons, mortality2015, by = c("race", "COUNTY"))
-
-ggplot(comparisons, aes(x = predicted_mortality, y = mortality.x)) +
+ggplot(comparisons, aes(x = predicted_mortality, y = mortality)) +
   geom_point() +
   geom_abline(slope = 1, intercept = 0) +
   xlab ("Predicted Values") +
   ylab ("Reported Values") +
   theme_minimal()
 
-ggplot(comparisons, aes(x = predicted_mortality, y = mortality.x)) +
+ggplot(comparisons, aes(x = predicted_mortality, y = mortality)) +
   geom_point() +
   ylim(c(0, 100)) +
   geom_abline(slope = 1, intercept = 0) +
@@ -180,13 +121,6 @@ ggplot(comparisons, aes(x = births, y = difference)) +
   ylab("Difference in Predicted vs Reported Mortalities") +
   theme_minimal()
 
-
-ggplot(comparisons, aes(x = GDP2015, y = difference)) +
-  geom_point() +
-  ylim(c(-10, 100)) +
-  xlab("GDP") +
-  ylab("Difference in Predicted vs Reported Mortalities") +
-  theme_minimal()
 
 ```
 
