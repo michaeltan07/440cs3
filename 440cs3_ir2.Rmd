@@ -5,7 +5,7 @@ date: "10/16/2019"
 output: html_document
 ---
 
-```{r, echo=FALSE, message=FALSE}
+```{r}
 library(dplyr)
 library(ggplot2)
 library(stringr)
@@ -17,7 +17,7 @@ library(brms)
 select = dplyr::select
 ```
 
-```{r, echo=FALSE}
+```{r}
 #read in mortality
 mortality = read.csv("nc_infant_mortality.csv") %>%
   mutate(COUNTY = str_remove_all(COUNTY, " "))
@@ -33,8 +33,8 @@ demos.clean = demos %>%
 mortality = merge(mortality , demos.clean, by = "COUNTY")
 ```
 
-### SCHS Table
-```{r, echo=FALSE}
+
+```{r}
 # replicate 2015 SCHS table exactly
 
 SCHS_Table_2015 = mortality %>%
@@ -56,13 +56,12 @@ SCHS_Table_2015 = mortality %>%
 
 ```
 
-### Model
-```{r, echo=FALSE}
+```{r}
 mortality = mortality %>%
   mutate(mortality_rate = mortality / 1000, race = relevel(race, "White")) %>%
   mutate(Median_Household_Income = Median_Household_Income / 1000)
 
-model = glmer(data = mortality, weights = births, formula = mortality_rate ~ (1|COUNTY) + (1|race) + Median_Household_Income + pctLowBirthWeight, family = binomial())
+model = glmer(data = mortality, weights = births, formula = mortality_rate ~ (1|COUNTY) + (1|race) + Median_Household_Income + pctLowBirthWeight + pctSmokers, family = binomial())
 
 summary(model)
 plot_model(model)
@@ -73,8 +72,10 @@ plot_model(model, type = "est")
 
 ```
 
+
+
 ### Compare our fitted values to the predictions from the schs table
-```{r, echo=FALSE, warning=FALSE}
+```{r}
 mortality_fitted = mortality
 mortality_fitted$fitted.values = fitted(model)
 
@@ -129,3 +130,9 @@ ggplot(comparisons, aes(x = births, y = difference)) +
 
 
 ```
+
+
+
+
+
+
