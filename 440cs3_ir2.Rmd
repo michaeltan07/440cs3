@@ -99,6 +99,8 @@ comparisons = merge(comparisons, mortality %>% filter(YOB == 2015))
 comparisons = comparisons %>%
   mutate(difference = mortality - predicted_mortality)
 
+write.csv(comparisons, "comparisons.csv")
+
 ggplot(comparisons, aes(x = predicted_mortality, y = mortality)) +
   geom_point() +
   geom_abline(slope = 1, intercept = 0) +
