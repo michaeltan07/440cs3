@@ -36,7 +36,6 @@ mortality = merge(mortality , demos.clean, by = "COUNTY")
 
 ```{r}
 # replicate 2015 SCHS table exactly
-
 SCHS_Table_2015 = mortality %>%
   mutate(race = relevel(race, "White")) %>%
   filter(YOB == 2015) %>%
@@ -44,17 +43,33 @@ SCHS_Table_2015 = mortality %>%
   mutate(smallSample = deaths < 10) %>%
   select(-deaths, -smallSample) %>%
   spread(race, mortality)
-
-
 ```
 
+### EDA
+```{r, echo=FALSE}
+#Median income
+ggplot(mortality)+
+  aes(x=Median_Household_Income,y=mortality_rate)+
+  geom_point()
+
+#Low birth weight
+ggplot(mortality)+
+  aes(x=pctLowBirthWeight,y=mortality_rate)+
+   geom_point()
+
+#Percent Smoke
+ggplot(mortality)+
+  aes(x=pctSmokers,y=mortality_rate)+
+  geom_point()
+
+```
 
 ```{r}
 mortality = mortality %>%
   mutate(mortality_rate = mortality / 1000, race = relevel(race, "White")) %>%
   mutate(Median_Household_Income = Median_Household_Income / 1000)
 
-model = glmer(data = mortality, weights = births, formula = mortality_rate ~ (1|COUNTY) + (1|race) + Median_Household_Income + pctLowBirthWeight, family = binomial())
+model = glmer(data = mortality, weights = births, formula = mortality_rate ~ (1|COUNTY) + (1|race) + Median_Household_Income + pctLowBirthWeight + pctSmokers, family = binomial())
 
 summary(model)
 plot_model(model)
