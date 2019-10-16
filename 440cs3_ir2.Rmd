@@ -1,11 +1,11 @@
 ---
 title: "440cs3_ir2"
-author: "Jake Epstein"
+author: "Jake Epstein, Man-Lin Hsiao, Sahil Patel, Daniel Spotiswood, & Michael Tan"
 date: "10/16/2019"
 output: html_document
 ---
 
-```{r}
+```{r, echo=FALSE, message=FALSE}
 library(dplyr)
 library(ggplot2)
 library(stringr)
@@ -17,7 +17,7 @@ library(brms)
 select = dplyr::select
 ```
 
-```{r}
+```{r, echo=FALSE}
 #read in mortality
 mortality = read.csv("nc_infant_mortality.csv") %>%
   mutate(COUNTY = str_remove_all(COUNTY, " "))
@@ -34,7 +34,7 @@ mortality = merge(mortality , demos.clean, by = "COUNTY")
 ```
 
 
-```{r}
+```{r, echo=FALSE}
 # replicate 2015 SCHS table exactly
 SCHS_Table_2015 = mortality %>%
   mutate(race = relevel(race, "White")) %>%
@@ -47,24 +47,42 @@ SCHS_Table_2015 = mortality %>%
 
 ### EDA
 ```{r, echo=FALSE}
-#Median income
-ggplot(mortality)+
-  aes(x=Median_Household_Income,y=mortality_rate)+
-  geom_point()
-
-#Low birth weight
-ggplot(mortality)+
-  aes(x=pctLowBirthWeight,y=mortality_rate)+
-   geom_point()
-
-#Percent Smoke
-ggplot(mortality)+
-  aes(x=pctSmokers,y=mortality_rate)+
-  geom_point()
-
+#Drop Clay outlier for plots
+eda=mortality%>%
+  filter(mortality<1000)
 ```
 
-```{r}
+```{r, echo=FALSE}
+#Median income
+cor1=cor(eda$Median_Household_Income,eda$mortality)
+ggplot(eda)+
+  aes(x=Median_Household_Income,y=mortality)+
+  geom_point()+
+  geom_smooth(method=lm)
+```
+As illustrated by the scatter plot above, there is distinct negative relationship between the median income of a county and the mortality rate in that county. Specifically, the two variables have a negative correlation of `r cor1`. This implies that counties with higher median income tend to have lower mortatility rates. XXX
+
+```{r, echo=FALSE}
+#Low birth weight
+cor2=cor(eda$pctLowBirthWeight,eda$mortality)
+ggplot(eda)+
+  aes(x=pctLowBirthWeight,y=mortality)+
+  geom_point()+
+  geom_smooth(method=lm)
+```
+As illustrated by the scatter plot above, there is distinct negative relationship between the percent of births that had a low birth weight in a county and the mortality rate in that county. Specifically, the two variables have a positive correlation of `r cor2`. This implies that counties with a percent of births that had a low birth weight tend to have lower mortatility rates. XXX
+
+```{r, echo=FALSE}
+#Percent Smoke
+cor3=cor(eda$pctSmokers,eda$mortality)
+ggplot(eda)+
+  aes(x=pctSmokers,y=mortality)+
+  geom_point()+
+  geom_smooth(method=lm)
+```
+As illustrated by the scatter plot above, there is distinct negative relationship between the proportion of a county that smokes and the mortality rate in that county. Specifically, the two variables have a negative correlation of `r cor3`. This implies that counties with more smokers tend to have lower mortatility rates. XXX
+
+```{r, echo=FALSE}
 mortality = mortality %>%
   mutate(mortality_rate = mortality / 1000, race = relevel(race, "White")) %>%
   mutate(Median_Household_Income = Median_Household_Income / 1000)
@@ -83,7 +101,7 @@ plot_model(model, type = "est")
 
 
 ### Compare our fitted values to the predictions from the schs table
-```{r}
+```{r, echo=FALSE, warning=FALSE}
 mortality_fitted = mortality
 mortality_fitted$fitted.values = fitted(model)
 
