@@ -92,4 +92,6 @@ write.csv(infant_mortality, file = "nc_infant_mortality.csv")
     rename(race = MRACER)
   
   births_all_mapped = merge(births, infant_mortality, by = c("CORES", "YOB", "race"))
+  
+  write.csv(births_all_mapped, file = "nc_births_all_mapped.csv")
 ```

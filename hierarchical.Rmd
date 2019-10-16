@@ -9,16 +9,83 @@ require(ggplot2)
 require(tidyverse)
 ```
 
-MT:
+##Data MT:
 ```{r,include=FALSE,eval=FALSE}
+#Births
 nc_births.df <- read.csv(file="nc_births_all_mapped.csv", header=TRUE, sep=",")
-nc_births.df <- nc_births.df %>%
-  filter(YOB == "2015")
+nc_births2015.df <- nc_births.df %>%
+  filter(YOB == "2015") %>%
+  mutate(DeathsDividedByBirths = deaths/births)  %>%
+  rename(hisp = MHISP) %>%
+  rename(cores = CORES) %>%
+  select(-PARITY_truncated, -PLUR_truncated, -CIGPN, -CIGFN, -CIGSN, -CIGLN)
 
+
+#Deaths
+deaths = read.csv(file = "Data/Yr1116Death.csv")
+
+#this part I'm having trouble with. Need to do indicator to show if an entry in the births df is dead or not
+#then we can run logistic regression
+#but unsure how to join that indicator in from deaths df to births df bc deaths df is really sparse
+deaths$deadStatus = 1
+deaths$race = as.numeric(deaths$race)
+deaths$race[deaths$hisp != "N"] = "Hispanic"
+deaths$race[deaths$race %in% c(3,4)] = "Other Non-White"
+deaths$race[deaths$race == 1] = "White"
+deaths$race[deaths$race == 2] = "Black"
+
+deaths2015 = deaths %>%
+  filter(year == 2015) %>%
+  rename(YOB = year) %>%
+  select(-dthage)
+
+
+#join (problem)
+nc.df = left_join(nc_births2015.df, deaths2015, by=c("cores", "YOB", "race", "hisp"))
+ 
+                   
+#GDP
+GDP = read.csv(file = "Data/GCP_Release_1.csv")
+GDP.clean <- GDP %>%
+  filter(Postal == "NC") %>%
+  rename(GDP2015 = X2015) %>%
+  filter(IndustryName == "All Industries") %>%
+  select(Countyname, GDP2015) %>%
+  rename(COUNTY = Countyname) 
+
+GDP.clean$COUNTY = toupper(GDP.clean$COUNTY)
+
+#join
+nc.df = inner_join(nc.df, GDP.clean, by ="COUNTY")
+
+
+#Cancer
+
+cancer = read.csv(file = "Data/CD13B Cancer Projections by County.csv")
+cancer.clean = cancer %>%
+  select(COUNTY, NewCancer, CancerDeaths)
+
+cancer.clean$COUNTY = toupper(cancer.clean$COUNTY)
+
+#join
+nc.df = inner_join(nc.df, cancer.clean, by ="COUNTY")
 #remove erroneous data entries
-nc_births.df$mortality[which(nc_births.df$mortality > 100)] = NA
-View(nc_births.df)
+nc.df$mortality[which(nc.df$mortality > 100)] = NA
+
 ```
+
+##Model
+```{r}
+model_deaths=glmer(deaths~(1+race|county), data = nc)
+summary(model_deaths)
+coef(model_deaths)
+
+model_mortality=lmer(mortality~(1+race|county), data = nc)
+summary(model_mortality)
+coef(model_mortality)
+
+```
+
 
 ```{r,echo=FALSE}
 #Clean data
@@ -140,6 +207,5 @@ mortality_table <- mortality_table %>%
 
 table = inner_join(mortality_table, death_table ,by ="county")
 
-View(table)
 ```
 
