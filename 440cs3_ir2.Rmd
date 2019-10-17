@@ -51,6 +51,11 @@ eda=mortality%>%
   filter(mortality<1000)
 ```
 
+XXXtableau screenshot
+
+XXX
+
+
 ```{r, echo=FALSE}
 #Median income
 cor1=cor(eda$Median_Household_Income,eda$mortality_rate)
@@ -87,9 +92,9 @@ ggplot(eda)+
 ```
 As illustrated by the scatter plot above, there is distinct negative relationship between the proportion of a county that smokes and the mortality rate in that county. Specifically, the two variables have a negative correlation of `r cor3`. This implies that counties with more smokers tend to have lower mortatility rates.
 
-### Model
+### Model Selection
 
-In order to
+XXX
 
 ```{r, echo=FALSE}
 mortality = mortality %>%
@@ -105,6 +110,19 @@ plot_model(model, type = "re")
 plot_model(model, type = "est")
 ```
 These charts show the differing intercepts for the differing counties and races. 
+
+##Model Interpretations
+The model revealed the following statistically significant effects:
+
+For a given county, race, and percentage of births in a county that have low birth weight, a one thousand dollar increase in median household income leads to 0.975x the probability of mortality (changed by a multiplicative factor of e^-0.025122  = 0.975).
+
+The explanation of this seems intuitive. It could be the case that becoming wealthier leads to being able to afford better obstetrics (birthing and pregnancy) services, which would lead to a decreased probability of a baby dying.
+
+For a given county, race, and median household income in a county, a one percent increase in the percentage of births that have low birth weight leads to 0.954x the probability of mortality (changed by a multiplicative factor of e^-0.046546  = 0.954).
+
+The explanation of this seems counterintuitive. It could be the case that families that know they will have a baby with low birth weight (mothers that know they will give birth early) will prepare for such a situation by picking a higher-quality obstetrics service, which would lead to a decreased probability of a baby dying.
+
+The county level variability is 0.01728 and the race level variability is 0.11702.
 
 ### Comparison
 ```{r, echo=FALSE, warning=FALSE}
