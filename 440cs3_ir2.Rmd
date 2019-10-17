@@ -2,10 +2,15 @@
 title: "440 CS3 IR2"
 author: "Jake Epstein, Man-Lin Hsiao, Sahil Patel, Daniel Spotiswood, & Michael Tan"
 date: "10/16/2019"
-output: html_document
+output:
+  word_document: default
+  html_document: default
 ---
 
 ```{r, echo=FALSE, message=FALSE}
+install.packages("brms")
+install.packages("sjPlot")
+install.packages("dplyr")
 library(dplyr)
 library(ggplot2)
 library(stringr)
@@ -175,12 +180,12 @@ ggplot(comparisons, aes(x = births, y = difference)) +
   ylab("Difference in Predicted vs Reported Mortalities") +
   theme_minimal()
 ```
-We see that our predictions do a strong job of estimating the reported values, and are centered around a slope of 1, so there is no clear bias The large residual points are mostly indicative of reported values that draw on a small quantity of data points. We must note that there are some points that lie outside of this graph, but again are mostly caused by a lack of data. This is demonstrated in the third chart that shows that as the number of births increase our predictions converge with the sample means.
+From the first chart, we see that our predictions do a strong job of estimating the reported values, and are centered around a slope of 1 (where predicted mortality rates equal reported mortality rates), so there is no clear bias.
+
+Zooming into the chart (chart 2 is on a smaller scale), it seems that predicted mortality rates are most accurate when they are low, but become more inconsistent when they are larger. These large residual points are mostly indicative of reported values that draw on a small quantity of data points. We should also note that there are some points that lie outside of this graph, but again are mostly caused by a lack of data. This is demonstrated in the third chart that shows that as the number of births increase our predictions converge with the sample means. There is larger variance along the y-axis with points nearer to the left hand side of the x-axis (sample size is small). On the other hand, points nearer the right hand side (sample size is large) of the x-axis are consistently closely aligned to 0. Therefore, As the sample size increases, the difference in the predicted mortality rate versus reported mortality rate of that county converges to zero.
 
 ### Discussion of Differences
 XXXtableau screenshot
 
 Our table of predicted mortality was pretty close to the table given by the 2015 NC Infant Mortality Report. For all counties except for Gates (23 births observed), Alleghany (22 births observed), Pamlico (30 births observed), Hyde (22 births observed), and Avery (24 births observed), the absolute difference between predicted and actual is less than 16. These aforementioned counties with absolute differences greater than 16 all have a very low number of births observed. The graph "Difference in Predicted vs Reported Mortalities" vs "Number of Births" also shows this trend. The model is much less accurate when number of births is low. As number of births gets higher (past about 500 births observed), the difference becomes very small (<~10). This makes sense, as there is less data to train the model on if there are fewer births observed. Of note is that there are about 30 counties where the difference was less than 1.
 
-test
-test
