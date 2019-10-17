@@ -1,11 +1,13 @@
 ---
-title: "440cs3_ir2"
-author: "Jake Epstein"
+title: "440 CS3 IR2"
+author: "Jake Epstein, Man-Lin Hsiao, Sahil Patel, Daniel Spotiswood, & Michael Tan"
 date: "10/16/2019"
-output: html_document
+output:
+  word_document: default
+  html_document: default
 ---
 
-```{r}
+```{r, echo=FALSE, message=FALSE}
 library(dplyr)
 library(ggplot2)
 library(stringr)
@@ -17,7 +19,7 @@ library(brms)
 select = dplyr::select
 ```
 
-```{r}
+```{r, echo=FALSE}
 #read in mortality
 mortality = read.csv("nc_infant_mortality.csv") %>%
   mutate(COUNTY = str_remove_all(COUNTY, " "))
@@ -31,10 +33,13 @@ demos.clean = demos %>%
   mutate(COUNTY = toupper(COUNTY) %>% str_remove_all(" "))
 
 mortality = merge(mortality , demos.clean, by = "COUNTY")
+
+mortality = mortality %>%
+  mutate(mortality_rate = mortality / 1000, race = relevel(race, "White")) %>%
+  mutate(Median_Household_Income = Median_Household_Income / 1000)
 ```
 
-
-```{r}
+```{r, echo=FALSE}
 # replicate 2015 SCHS table exactly
 SCHS_Table_2015 = mortality %>%
   mutate(race = relevel(race, "White")) %>%
@@ -47,27 +52,60 @@ SCHS_Table_2015 = mortality %>%
 
 ### EDA
 ```{r, echo=FALSE}
-#Median income
-ggplot(mortality)+
-  aes(x=Median_Household_Income,y=mortality_rate)+
-  geom_point()
-
-#Low birth weight
-ggplot(mortality)+
-  aes(x=pctLowBirthWeight,y=mortality_rate)+
-   geom_point()
-
-#Percent Smoke
-ggplot(mortality)+
-  aes(x=pctSmokers,y=mortality_rate)+
-  geom_point()
-
+#Drop Clay outlier for plots
+eda=mortality%>%
+  filter(mortality<1000)
 ```
 
-```{r}
-mortality = mortality %>%
-  mutate(mortality_rate = mortality / 1000, race = relevel(race, "White")) %>%
-  mutate(Median_Household_Income = Median_Household_Income / 1000)
+XXXtableau screenshot
+
+The bar graph above clearly depicts the variance in the sample size for each race in North Carolina. As shown, there are substantially more white births (382,602) than any other race. Nonetheless, the number of births in each year from 2011 to 2016 stays fairly constant.
+
+In addition, the variance in the sizes of each circle on the map above is indicative of the high variation in the number of births in each county. This information, paired with the aforementioned variance in births by race, underscores the need to share some, but not all, information at the county level and by race. Furthermore, the colour of each circle on the map shows that the mortality rate, in fact, varies greatly by county.
+
+
+```{r, echo=FALSE}
+#Median income
+cor1 = cor(eda$Median_Household_Income, eda$mortality_rate)
+ggplot(eda)+
+  aes(x=Median_Household_Income,y=mortality_rate)+
+  geom_point()+
+  geom_smooth(method=lm)+
+  theme_minimal()+
+  labs(title="Median Household Income v. Mortality Rate",y="Mortality Rate",x="Median Household Income")
+```
+As illustrated by the scatter plot above, there is distinct negative relationship between the median income of a county and the mortality rate in that county. Specifically, the two variables have a negative correlation of `r cor1`. This implies that counties with higher median income tend to have lower mortatility rates.
+
+```{r, echo=FALSE}
+#Low birth weight
+cor2=cor(eda$pctLowBirthWeight,eda$mortality)
+ggplot(eda)+
+  aes(x=pctLowBirthWeight,y=mortality_rate)+
+  geom_point()+
+  geom_smooth(method=lm)+
+  theme_minimal()+
+  labs(title="Percent Low Birth Weight v. Mortality Rate",y="Mortality Rate",x="Percent Low Birth Weight")
+```
+As illustrated by the scatter plot above, there is distinct negative relationship between the percent of births that had a low birth weight in a county and the mortality rate in that county. Specifically, the two variables have a positive correlation of `r cor2`. This implies that counties with a percent of births that had a low birth weight tend to have higher mortatility rates.
+
+```{r, echo=FALSE}
+#Percent Smoke
+cor3=cor(eda$pctSmokers,eda$mortality_rate)
+ggplot(eda)+
+  aes(x=pctSmokers,y=mortality_rate)+
+  geom_point()+
+  geom_smooth(method=lm)+
+  theme_minimal()+
+  labs(title="Percent Smokers v. Mortality Rate",y="Mortality Rate",x="Percent Smokers")
+```
+As illustrated by the scatter plot above, there is distinct negative relationship between the proportion of a county that smokes and the mortality rate in that county. Specifically, the two variables have a negative correlation of `r cor3`. This implies that counties with more smokers tend to have lower mortatility rates.
+
+### Model Selection
+In order to accurately predict the mortality rates, we elected to use a multilevel logsitic model. We allowed for random effects by county due to the large number of counties (100), as well as by race (as there are large samples across races). We implemented fixed effects for median household income, the percent of low birth weights in a county, and the proportion of a county that smokes. Therefore, our model allows us to account for clustering of mortality rates at the county level and by race, while allowing for variation due to the aforementioned fixed effects.
+
+We chose to use a logit model as it aptly bounds the outcome variable (the mortality rate) between 0 and 1. Furthermore, the multilevel logistic model incorporates some pooling and thus allows us to benefit from borrowing information across counties and races, while still accounting for variation across counties and races.
+```{r, echo=FALSE}
+
 
 model = glmer(data = mortality, weights = births, formula = mortality_rate ~ (1|COUNTY) + (1|race) + Median_Household_Income + pctLowBirthWeight + pctSmokers, family = binomial())
 
@@ -75,16 +113,25 @@ summary(model)
 plot_model(model)
 
 plot_model(model, type = "re") 
-plot_model(model, type = "est") 
-
-
+plot_model(model, type = "est")
 ```
 These charts show the differing intercepts for the differing counties and races. 
 
+### Model Interpretations
+The model revealed the following statistically significant effects:
 
+For a given county, race, and percentage of births in a county that have low birth weight, a one thousand dollar increase in median household income leads to 0.975x the probability of mortality (changed by a multiplicative factor of e^-0.025122  = 0.975).
 
-### Compare our fitted values to the predictions from the schs table
-```{r}
+The explanation of this seems intuitive. It could be the case that becoming wealthier leads to being able to afford better obstetrics (birthing and pregnancy) services, which would lead to a decreased probability of a baby dying.
+
+For a given county, race, and median household income in a county, a one percent increase in the percentage of births that have low birth weight leads to 0.954x the probability of mortality (changed by a multiplicative factor of e^-0.046546  = 0.954).
+
+The explanation of this seems counterintuitive. It could be the case that families that know they will have a baby with low birth weight (mothers that know they will give birth early) will prepare for such a situation by picking a higher-quality obstetrics service, which would lead to a decreased probability of a baby dying.
+
+The county level variability is 0.01728 and the race level variability is 0.11702.
+
+### Comparison
+```{r, echo=FALSE, warning=FALSE}
 mortality_fitted = mortality
 mortality_fitted$fitted.values = fitted(model)
 
@@ -134,8 +181,10 @@ ggplot(comparisons, aes(x = births, y = difference)) +
 ```
 We see that our predictions do a strong job of estimating the reported values, and are centered around a slope of 1, so there is no clear bias The large residual points are mostly indicative of reported values that draw on a small quantity of data points. We must note that there are some points that lie outside of this graph, but again are mostly caused by a lack of data. This is demonstrated in the third chart that shows that as the number of births increase our predictions converge with the sample means.
 
+### Discussion of Differences
+XXXtableau screenshot
 
+Our table of predicted mortality was pretty close to the table given by the 2015 NC Infant Mortality Report. For all counties except for Gates (23 births observed), Alleghany (22 births observed), Pamlico (30 births observed), Hyde (22 births observed), and Avery (24 births observed), the absolute difference between predicted and actual is less than 16. These aforementioned counties with absolute differences greater than 16 all have a very low number of births observed. The graph "Difference in Predicted vs Reported Mortalities" vs "Number of Births" also shows this trend. The model is much less accurate when number of births is low. As number of births gets higher (past about 500 births observed), the difference becomes very small (<~10). This makes sense, as there is less data to train the model on if there are fewer births observed. Of note is that there are about 30 counties where the difference was less than 1.
 
-
-
-
+test
+test
