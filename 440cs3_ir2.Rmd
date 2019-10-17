@@ -8,9 +8,9 @@ output:
 ---
 
 ```{r, echo=FALSE, message=FALSE}
-install.packages("brms")
-install.packages("sjPlot")
-install.packages("dplyr")
+#install.packages("brms")
+#install.packages("sjPlot")
+#install.packages("dplyr")
 library(dplyr)
 library(ggplot2)
 library(stringr)
@@ -62,7 +62,7 @@ eda=mortality%>%
 
 XXXtableau screenshot
 
-The bar graph above clearly depicts the variance in the sample size for each race in North Carolina. As shown, there are substantially more white births (382,602) than any other race. Nonetheless, the number of births in each year from 2011 to 2016 stays fairly constant.
+The map above clearly depicts the large variance in number of births and mortality rates across the different counties. The largest counties, based on births, appear to have relatively low mortality rates, while we see spikes in mortality rate in many of those with smaller populations. As shown, there are substantially more white births (382,602) than any other race, specifically we have very few data points for American Indian's and people that identify as Other Non-White. It is important to note that the number of births in each year from 2011 to 2016 stays fairly constant. 
 
 In addition, the variance in the sizes of each circle on the map above is indicative of the high variation in the number of births in each county. This information, paired with the aforementioned variance in births by race, underscores the need to share some, but not all, information at the county level and by race. Furthermore, the colour of each circle on the map shows that the mortality rate, in fact, varies greatly by county.
 
