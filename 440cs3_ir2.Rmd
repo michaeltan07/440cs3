@@ -33,7 +33,6 @@ demos.clean = demos %>%
 mortality = merge(mortality , demos.clean, by = "COUNTY")
 ```
 
-
 ```{r, echo=FALSE}
 # replicate 2015 SCHS table exactly
 SCHS_Table_2015 = mortality %>%
@@ -82,6 +81,7 @@ ggplot(eda)+
 ```
 As illustrated by the scatter plot above, there is distinct negative relationship between the proportion of a county that smokes and the mortality rate in that county. Specifically, the two variables have a negative correlation of `r cor3`. This implies that counties with more smokers tend to have lower mortatility rates. XXX
 
+### Model
 ```{r, echo=FALSE}
 mortality = mortality %>%
   mutate(mortality_rate = mortality / 1000, race = relevel(race, "White")) %>%
@@ -99,9 +99,7 @@ plot_model(model, type = "est")
 ```
 These charts show the differing intercepts for the differing counties and races. 
 
-
-
-### Compare our fitted values to the predictions from the schs table
+### Comparison
 ```{r, echo=FALSE, warning=FALSE}
 mortality_fitted = mortality
 mortality_fitted$fitted.values = fitted(model)
@@ -151,9 +149,3 @@ ggplot(comparisons, aes(x = births, y = difference)) +
   theme_minimal()
 ```
 We see that our predictions do a strong job of estimating the reported values, and are centered around a slope of 1, so there is no clear bias The large residual points are mostly indicative of reported values that draw on a small quantity of data points. We must note that there are some points that lie outside of this graph, but again are mostly caused by a lack of data. This is demonstrated in the third chart that shows that as the number of births increase our predictions converge with the sample means.
-
-
-
-
-
-
