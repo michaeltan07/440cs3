@@ -36,6 +36,10 @@ demos.clean = demos %>%
   mutate(COUNTY = toupper(COUNTY) %>% str_remove_all(" "))
 
 mortality = merge(mortality , demos.clean, by = "COUNTY")
+
+mortality = mortality %>%
+  mutate(mortality_rate = mortality / 1000, race = relevel(race, "White")) %>%
+  mutate(Median_Household_Income = Median_Household_Income / 1000)
 ```
 
 ```{r, echo=FALSE}
@@ -65,7 +69,7 @@ In addition, the variance in the sizes of each circle on the map above is indica
 
 ```{r, echo=FALSE}
 #Median income
-cor1=cor(eda$Median_Household_Income,eda$mortality_rate)
+cor1 = cor(eda$Median_Household_Income, eda$mortality_rate)
 ggplot(eda)+
   aes(x=Median_Household_Income,y=mortality_rate)+
   geom_point()+
@@ -104,9 +108,7 @@ In order to accurately predict the mortality rates, we elected to use a multilev
 
 We chose to use a logit model as it aptly bounds the outcome variable (the mortality rate) between 0 and 1. Furthermore, the multilevel logistic model incorporates some pooling and thus allows us to benefit from borrowing information across counties and races, while still accounting for variation across counties and races.
 ```{r, echo=FALSE}
-mortality = mortality %>%
-  mutate(mortality_rate = mortality / 1000, race = relevel(race, "White")) %>%
-  mutate(Median_Household_Income = Median_Household_Income / 1000)
+
 
 model = glmer(data = mortality, weights = births, formula = mortality_rate ~ (1|COUNTY) + (1|race) + Median_Household_Income + pctLowBirthWeight + pctSmokers, family = binomial())
 
