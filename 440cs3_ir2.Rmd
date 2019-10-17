@@ -93,8 +93,9 @@ ggplot(eda)+
 As illustrated by the scatter plot above, there is distinct negative relationship between the proportion of a county that smokes and the mortality rate in that county. Specifically, the two variables have a negative correlation of `r cor3`. This implies that counties with more smokers tend to have lower mortatility rates.
 
 ### Model Selection
+In order to accurately predict the mortality rates, we elected to use a multilevel logsitic model. We allowed for random effects by county and by race, but implemented fixed effects for median household income, the percent of low birth weights in a county, and the proportion of a county that smokes.
 
-XXX
+We chose to use a logit model as it aptly bounds the outcome variable (the mortality rate) between 0 and 1. Furthermore, this particular form for the model XXX
 
 ```{r, echo=FALSE}
 mortality = mortality %>%
@@ -111,7 +112,7 @@ plot_model(model, type = "est")
 ```
 These charts show the differing intercepts for the differing counties and races. 
 
-##Model Interpretations
+### Model Interpretations
 The model revealed the following statistically significant effects:
 
 For a given county, race, and percentage of births in a county that have low birth weight, a one thousand dollar increase in median household income leads to 0.975x the probability of mortality (changed by a multiplicative factor of e^-0.025122  = 0.975).
@@ -174,3 +175,6 @@ ggplot(comparisons, aes(x = births, y = difference)) +
   theme_minimal()
 ```
 We see that our predictions do a strong job of estimating the reported values, and are centered around a slope of 1, so there is no clear bias The large residual points are mostly indicative of reported values that draw on a small quantity of data points. We must note that there are some points that lie outside of this graph, but again are mostly caused by a lack of data. This is demonstrated in the third chart that shows that as the number of births increase our predictions converge with the sample means.
+
+### Discussion of Differences
+Our table of predicted mortality was pretty close to the table given by the 2015 NC Infant Mortality Report. For all counties except for Gates (23 births observed), Alleghany (22 births observed), Pamlico (30 births observed), Hyde (22 births observed), and Avery (24 births observed), the absolute difference between predicted and actual is less than 16. These aforementioned counties with absolute differences greater than 16 all have a very low number of births observed. The graph "Difference in Predicted vs Reported Mortalities" vs "Number of Births" also shows this trend. The model is much less accurate when number of births is low. As number of births gets higher (past about 500 births observed), the difference becomes very small (<~10). This makes sense, as there is less data to train the model on if there are fewer births observed. Of note is that there are about 30 counties where the difference was less than 1.
