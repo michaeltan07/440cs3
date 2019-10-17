@@ -373,7 +373,7 @@
             <groupfilter function='level-members' level='[COUNTY]' user:ui-action-filter='[Action3]' user:ui-enumeration='all' user:ui-marker='enumerate' />
           </filter>
           <filter class='categorical' column='[federated.0s460ii1mygijy1a2o48j1n5xnl9].[Action (YEAR(Year))]'>
-            <groupfilter function='member' level='[yr:YOB:ok]' member='2015' user:ui-action-filter='[Action1]' user:ui-domain='database' user:ui-enumeration='inclusive' user:ui-marker='enumerate' />
+            <groupfilter function='level-members' level='[yr:YOB:ok]' user:ui-action-filter='[Action1]' user:ui-enumeration='all' user:ui-marker='enumerate' />
           </filter>
           <filter class='categorical' column='[federated.0s460ii1mygijy1a2o48j1n5xnl9].[Action (Year)]'>
             <groupfilter function='level-members' level='[YOB]' user:ui-action-filter='[Action1]' user:ui-enumeration='all' user:ui-marker='enumerate' />
@@ -430,7 +430,7 @@
             <groupfilter function='level-members' level='[COUNTY]' user:ui-action-filter='[Action3]' user:ui-enumeration='all' user:ui-marker='enumerate' />
           </filter>
           <filter class='categorical' column='[federated.0s460ii1mygijy1a2o48j1n5xnl9].[Action (Race)]'>
-            <groupfilter function='level-members' level='[race]' user:ui-action-filter='[Action2]' user:ui-enumeration='all' user:ui-marker='enumerate' />
+            <groupfilter function='member' level='[race]' member='&quot;American Indian&quot;' user:ui-action-filter='[Action2]' user:ui-domain='database' user:ui-enumeration='inclusive' user:ui-marker='enumerate' />
           </filter>
           <slices>
             <column>[federated.0s460ii1mygijy1a2o48j1n5xnl9].[Action (Race)]</column>
@@ -485,10 +485,10 @@
             <column-instance column='[YOB]' derivation='Year' name='[yr:YOB:ok]' pivot='key' type='ordinal' />
           </datasource-dependencies>
           <filter class='categorical' column='[federated.0s460ii1mygijy1a2o48j1n5xnl9].[Action (Race)]'>
-            <groupfilter function='level-members' level='[race]' user:ui-action-filter='[Action2]' user:ui-enumeration='all' user:ui-marker='enumerate' />
+            <groupfilter function='member' level='[race]' member='&quot;American Indian&quot;' user:ui-action-filter='[Action2]' user:ui-domain='database' user:ui-enumeration='inclusive' user:ui-marker='enumerate' />
           </filter>
           <filter class='categorical' column='[federated.0s460ii1mygijy1a2o48j1n5xnl9].[Action (YEAR(Year))]'>
-            <groupfilter function='member' level='[yr:YOB:ok]' member='2015' user:ui-action-filter='[Action1]' user:ui-domain='database' user:ui-enumeration='inclusive' user:ui-marker='enumerate' />
+            <groupfilter function='level-members' level='[yr:YOB:ok]' user:ui-action-filter='[Action1]' user:ui-enumeration='all' user:ui-marker='enumerate' />
           </filter>
           <filter class='categorical' column='[federated.0s460ii1mygijy1a2o48j1n5xnl9].[Action (Year)]'>
             <groupfilter function='level-members' level='[YOB]' user:ui-action-filter='[Action1]' user:ui-enumeration='all' user:ui-marker='enumerate' />
@@ -501,6 +501,10 @@
           <aggregation value='true' />
         </view>
         <style>
+          <style-rule element='axis'>
+            <encoding attr='space' class='0' field='[federated.0s460ii1mygijy1a2o48j1n5xnl9].[Longitude (generated)]' field-type='quantitative' max='-8633522.2081843801' min='-9250926.2439630274' projection='EPSG:3857' range-type='fixed' scope='cols' type='space' />
+            <encoding attr='space' class='0' field='[federated.0s460ii1mygijy1a2o48j1n5xnl9].[Latitude (generated)]' field-type='quantitative' max='4473269.7649007281' min='3932024.5558991092' projection='EPSG:3857' range-type='fixed' scope='rows' type='space' />
+          </style-rule>
           <style-rule element='mark'>
             <encoding attr='size' field='[federated.0s460ii1mygijy1a2o48j1n5xnl9].[sum:births:qk]' field-type='quantitative' max='100000' max-size='1' min='0' min-size='0' type='quantsize' />
             <encoding attr='color' field='[federated.0s460ii1mygijy1a2o48j1n5xnl9].[usr:Calculation_2668101349164535809:qk]' max='25.0' min='0.0' type='custom-interpolated'>
@@ -687,7 +691,7 @@
       <simple-id uuid='{5B7C3CBB-E457-4539-9F57-29754309E6C0}' />
     </dashboard>
   </dashboards>
-  <windows pres-mode='true' show-side-pane='false' source-height='30'>
+  <windows show-side-pane='false' source-height='30'>
     <window class='worksheet' name='County Map'>
       <cards>
         <edge name='left'>
@@ -824,7 +828,7 @@
           <default-map-tool-selection tool='1' />
         </viewpoint>
       </viewpoints>
-      <active id='11' />
+      <active id='3' />
       <simple-id uuid='{7C8A4306-3AD4-41F7-852D-78571D6EAF18}' />
     </window>
   </windows>

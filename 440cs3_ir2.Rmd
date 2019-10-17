@@ -8,9 +8,9 @@ output:
 ---
 
 ```{r, echo=FALSE, message=FALSE}
-#install.packages("brms")
-#install.packages("sjPlot")
-#install.packages("dplyr")
+install.packages("brms")
+install.packages("sjPlot")
+install.packages("dplyr")
 library(dplyr)
 library(ggplot2)
 library(stringr)
@@ -52,6 +52,9 @@ SCHS_Table_2015 = mortality %>%
   select(-deaths, -smallSample) %>%
   spread(race, mortality)
 ```
+###Introduction
+This case study aims to estimate mortality rates across North Carolina counties. We compare our predictions to that of the SCHS in 2015. In order to better inform our predictions, we obtained North Carolina health data from a study performed by the Robert Wood Johnson Foundation. Initially we explored correlations between mortality rate and percent insured, median household income, percent low birth weight, percent obese, and percent smokers. Through EDA and model fitting, we narrowed these features down to percent low birth weight, percent smokers, and median household income.
+
 
 ### EDA
 ```{r, echo=FALSE}
@@ -59,6 +62,8 @@ SCHS_Table_2015 = mortality %>%
 eda=mortality%>%
   filter(mortality<1000)
 ```
+
+
 
 XXXtableau screenshot
 
@@ -131,6 +136,8 @@ For a given county, race, and median household income in a county, a one percent
 
 The explanation of this seems counterintuitive. It could be the case that families that know they will have a baby with low birth weight (mothers that know they will give birth early) will prepare for such a situation by picking a higher-quality obstetrics service, which would lead to a decreased probability of a baby dying.
 
+In addition, we see that holding all else constant, we predict American Indian’s and African American’s to experience the largest mortality rate, while we predict whites to experience the least.
+
 The county level variability is 0.01728 and the race level variability is 0.11702.
 
 ### Comparison
@@ -190,4 +197,8 @@ Zooming into the chart (chart 2 is on a smaller scale), it seems that predicted 
 XXXtableau screenshot
 
 Our table of predicted mortality was pretty close to the table given by the 2015 NC Infant Mortality Report. For all counties except for Gates (23 births observed), Alleghany (22 births observed), Pamlico (30 births observed), Hyde (22 births observed), and Avery (24 births observed), the absolute difference between predicted and actual is less than 16. These aforementioned counties with absolute differences greater than 16 all have a very low number of births observed. The graph "Difference in Predicted vs Reported Mortalities" vs "Number of Births" also shows this trend. The model is much less accurate when number of births is low. As number of births gets higher (past about 500 births observed), the difference becomes very small (<~10). This makes sense, as there is less data to train the model on if there are fewer births observed. Of note is that there are about 30 counties where the difference was less than 1.
+
+These charts suggest that SCHS puts too much weight on the sample mean of counties where there are relatively few data points. We urge the SCHS to change their practices and use pooling in order to get a more realistic estimate amidst counties with large deviations. For example, simply looking at Gates county, we see a standard deviation of ~272 across the three years of mortality data(mortality rate given 1000 births). This variance can be handled using pooling in which one weights the credibility of the sample mean by the total number of births. 
+
+Furthermore, we strongly urge the SCHS to include the features, percent smokers, median household income, and percent low birth weight in their model. These features help further eliminate variance and improve upon our predictions of mortality rates. These features all have been shown to have strong correlations with mortality rates and help us further account for county level differences beyond simply the sample estimates. They provide a systematic way to categorize/understand the mortality rates at the county level.
 
