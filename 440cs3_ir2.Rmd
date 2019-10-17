@@ -93,10 +93,9 @@ ggplot(eda)+
 As illustrated by the scatter plot above, there is distinct negative relationship between the proportion of a county that smokes and the mortality rate in that county. Specifically, the two variables have a negative correlation of `r cor3`. This implies that counties with more smokers tend to have lower mortatility rates.
 
 ### Model Selection
-In order to accurately predict the mortality rates, we elected to use a multilevel logsitic model. We allowed for random effects by county and by race, but implemented fixed effects for median household income, the percent of low birth weights in a county, and the proportion of a county that smokes.
+In order to accurately predict the mortality rates, we elected to use a multilevel logsitic model. We allowed for random effects by county due to the large number of counties (100), as well as by race (as there are large samples across races). We implemented fixed effects for median household income, the percent of low birth weights in a county, and the proportion of a county that smokes. Therefore, our model allows us to account for clustering of mortality rates at the county level and by race, while allowing for variation due to the aforementioned fixed effects.
 
-We chose to use a logit model as it aptly bounds the outcome variable (the mortality rate) between 0 and 1. Furthermore, this particular form for the model XXX
-
+We chose to use a logit model as it aptly bounds the outcome variable (the mortality rate) between 0 and 1. Furthermore, the multilevel logistic model incorporates some pooling and thus allows us to benefit from borrowing information across counties and races, while still accounting for variation across counties and races.
 ```{r, echo=FALSE}
 mortality = mortality %>%
   mutate(mortality_rate = mortality / 1000, race = relevel(race, "White")) %>%
