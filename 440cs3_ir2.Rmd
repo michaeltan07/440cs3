@@ -266,3 +266,21 @@ These charts suggest that SCHS puts too much weight on the sample mean of counti
 
 Furthermore, we strongly urge the SCHS to include the features, percent smokers, median household income, and percent low birth weight in their model. These features help further eliminate variance and improve upon our predictions of mortality rates. These features all have been shown to have strong correlations with mortality rates and help us further account for county level differences beyond simply the sample estimates. They provide a systematic way to categorize/understand the mortality rates at the county level.
 
+
+```{r, include=FALSE, eval=FALSE}
+mortality_summary = mortality %>%
+  group_by(race, YOB) %>%
+  summarize("numbirths" = sum(births), "numdeaths" = sum(deaths)) %>%
+  ungroup()
+
+mortality_summary = mortality_summary %>%
+  mutate(rate = 1000*numdeaths / numbirths) %>%
+  rename(Year = YOB)
+
+national_summary = read.csv("National Mortality Data.csv") %>%
+  rename(race=Race)
+
+summaries = merge(mortality_summary, national_summary, by = c("Year", "race"))
+
+write.csv(summaries, "summaries_by_race.csv")
+```
