@@ -134,6 +134,8 @@ model_racefixed = glmer(data = mortality, weights = births, formula = mortality_
 
 model_barebones = glmer(data = mortality, weights = births, formula = mortality_rate ~ (1|COUNTY) + (1|race), family = binomial())
 
+model_barebones_fixed = glmer(data = mortality, weights = births, formula = mortality_rate ~ (1|COUNTY) + race, family = binomial())
+
 
 # expanded_mortality = mortality %>%
 #   mutate(live = births - deaths) %>%
@@ -178,7 +180,7 @@ In addition, we see that holding all else constant, we predict American Indianâ€
 
 The county level variability is 0.01728 and the race level variability is 0.11702.
 
-### Comparison
+### Comparison of Models
 ```{r, echo=FALSE, warning=FALSE}
 
 ## create ROC curve
@@ -186,13 +188,14 @@ mortality_fitted = mortality
 mortality_fitted$fitted = fitted(model)
 mortality_fitted$fitted_barebones = fitted(model_barebones)
 mortality_fitted$fitted_racefixed = fitted(model_racefixed)
+mortality_fitted$fitted_barebones_fixed = fitted(model_barebones_fixed)
 
 
 expanded = mortality_fitted %>%
   select(-births, -deaths) %>%
   merge(mortality2016 %>% select(COUNTY, race, births, deaths), by = c("COUNTY", "race")) %>%
   mutate(live = births - deaths) %>%
-  select(deaths, live, fitted, fitted_barebones, fitted_racefixed) %>%
+  select(deaths, live, fitted, fitted_barebones, fitted_racefixed, fitted_barebones_fixed) %>%
   gather("type", "quantity", 1:2) %>%
   mutate(alive = as.numeric(type == "live")) %>%
   uncount(quantity)
@@ -200,6 +203,9 @@ expanded = mortality_fitted %>%
 roc(response = expanded$alive, predictor = expanded$fitted, plot = FALSE)
 roc(response = expanded$alive, predictor = expanded$fitted_barebones, plot = FALSE)
 roc(response = expanded$alive, predictor = expanded$fitted_racefixed, plot = FALSE)
+roc(response = expanded$alive, predictor = expanded$fitted_barebones_fixed, plot = FALSE)
+anova(model, model_barebones, model_racefixed, model_barebones_fixed)
+
 
 ```
 
