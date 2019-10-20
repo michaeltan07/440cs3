@@ -8,9 +8,6 @@ output:
 ---
 
 ```{r, echo=FALSE, message=FALSE}
-install.packages("brms")
-install.packages("sjPlot")
-install.packages("dplyr")
 library(dplyr)
 library(ggplot2)
 library(stringr)
@@ -35,11 +32,26 @@ demos = read.csv("Data/County_Demo_Data.csv")
 demos.clean = demos %>%
   mutate(COUNTY = toupper(COUNTY) %>% str_remove_all(" "))
 
+demos2016 = read.csv("Data/County_Demo_Data2016.csv")
+demos2016.clean = demos %>%
+  mutate(COUNTY = toupper(COUNTY) %>% str_remove_all(" "))
+mortality2016 = mortality %>%
+  filter(YOB == 2016)
+
+mortality2016 = merge(mortality2016 , demos2016.clean, by = "COUNTY")
+
+mortality2016 = mortality2016 %>%
+  mutate(mortality_rate = mortality / 1000, race = relevel(race, "White")) %>%
+  mutate(Median_Household_Income = Median_Household_Income / 1000)
+
 mortality = merge(mortality , demos.clean, by = "COUNTY")
 
 mortality = mortality %>%
   mutate(mortality_rate = mortality / 1000, race = relevel(race, "White")) %>%
   mutate(Median_Household_Income = Median_Household_Income / 1000)
+
+mortality = mortality %>%
+  filter(YOB != 2016)
 ```
 
 ```{r, echo=FALSE}
@@ -144,7 +156,6 @@ The county level variability is 0.01728 and the race level variability is 0.1170
 ```{r, echo=FALSE, warning=FALSE}
 mortality_fitted = mortality
 mortality_fitted$fitted.values = fitted(model)
-
 
 our_table = mortality_fitted %>%
   filter(YOB == 2015) %>%
