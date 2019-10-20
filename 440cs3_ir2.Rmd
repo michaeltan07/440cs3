@@ -8,9 +8,6 @@ output:
 ---
 
 ```{r, echo=FALSE, message=FALSE}
-install.packages("brms")
-install.packages("sjPlot")
-install.packages("dplyr")
 library(dplyr)
 library(ggplot2)
 library(stringr)
@@ -18,6 +15,7 @@ library(tidyr)
 library(lme4)
 library(sjPlot)
 library(brms)
+library(pROC)
 
 select = dplyr::select
 ```
@@ -117,6 +115,7 @@ We chose to use a logit model as it aptly bounds the outcome variable (the morta
 
 model = glmer(data = mortality, weights = births, formula = mortality_rate ~ (1|COUNTY) + (1|race) + Median_Household_Income + pctLowBirthWeight + pctSmokers, family = binomial())
 
+
 summary(model)
 plot_model(model)
 
@@ -144,6 +143,15 @@ The county level variability is 0.01728 and the race level variability is 0.1170
 ```{r, echo=FALSE, warning=FALSE}
 mortality_fitted = mortality
 mortality_fitted$fitted.values = fitted(model)
+
+expanded = mortality_fitted %>%
+  mutate(live = births - deaths) %>%
+  select(deaths, live, fitted.values) %>%
+  gather("type", "quantity", 1:2) %>%
+  mutate(alive = as.numeric(type == "live")) %>%
+  uncount(quantity)
+
+roc(response = expanded$alive, predictor = expanded$fitted.values, plot = TRUE)
 
 
 our_table = mortality_fitted %>%
