@@ -212,16 +212,16 @@ anova(model, model_barebones, model_racefixed, model_barebones_fixed)
 ```{r}
 our_table = mortality_fitted %>%
   filter(YOB == 2015) %>%
-  select(fitted.values, race, COUNTY) %>%
-  mutate(predicted_mortality = 1000*fitted.values) %>%
-  select(-fitted.values) %>%
+  select(fitted_racefixed, race, COUNTY) %>%
+  mutate(predicted_mortality = 1000*fitted_racefixed) %>%
+  select(-fitted_racefixed) %>%
   spread(race, predicted_mortality)
 
 
 our_table_as_list = mortality_fitted %>%
-  select(COUNTY, race, fitted.values) %>%
-  mutate(predicted_mortality = 1000*fitted.values) %>%
-  select(-fitted.values)
+  select(COUNTY, race, fitted_racefixed) %>%
+  mutate(predicted_mortality = 1000*fitted_racefixed) %>%
+  select(-fitted_racefixed)
 
 schs_table_as_list = SCHS_Table_2015 %>%
   gather(race, mortality, 2:length(SCHS_Table_2015)) %>%
