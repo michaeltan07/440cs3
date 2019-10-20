@@ -76,7 +76,7 @@ eda=mortality%>%
   filter(mortality<1000)
 ```
 
-
+[add section comparing U.S. averages to NC]
 
 XXXtableau screenshot
 
@@ -167,6 +167,8 @@ These charts show the differing intercepts for the differing counties and races.
 
 ### Model Interpretations
 The model revealed the following statistically significant effects:
+
+[TODO: update with fixed effect for race, see if numbers change]
 
 For a given county, race, and percentage of births in a county that have low birth weight, a one thousand dollar increase in median household income leads to 0.975x the probability of mortality (changed by a multiplicative factor of e^-0.025122  = 0.975).
 
@@ -259,6 +261,8 @@ Zooming into the chart (chart 2 is on a smaller scale), it seems that predicted 
 
 ### Discussion of Differences
 XXXtableau screenshot
+
+[TODO: reword, less focus on SCHS]
 
 Our table of predicted mortality was pretty close to the table given by the 2015 NC Infant Mortality Report. For all counties except for Gates (23 births observed), Alleghany (22 births observed), Pamlico (30 births observed), Hyde (22 births observed), and Avery (24 births observed), the absolute difference between predicted and actual is less than 16. These aforementioned counties with absolute differences greater than 16 all have a very low number of births observed. The graph "Difference in Predicted vs Reported Mortalities" vs "Number of Births" also shows this trend. The model is much less accurate when number of births is low. As number of births gets higher (past about 500 births observed), the difference becomes very small (<~10). This makes sense, as there is less data to train the model on if there are fewer births observed. Of note is that there are about 30 counties where the difference was less than 1.
 
