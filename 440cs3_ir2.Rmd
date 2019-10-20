@@ -3,8 +3,8 @@ title: "440 CS3 IR2"
 author: "Jake Epstein, Man-Lin Hsiao, Sahil Patel, Daniel Spotiswood, & Michael Tan"
 date: "10/16/2019"
 output:
-  word_document: default
   html_document: default
+  word_document: default
 ---
 
 ```{r, echo=FALSE, message=FALSE}
@@ -16,7 +16,7 @@ library(lme4)
 library(sjPlot)
 library(brms)
 library(pROC)
-
+library(gridExtra)
 select = dplyr::select
 ```
 
@@ -70,7 +70,7 @@ This case study aims to estimate mortality rates across North Carolina counties.
 
 
 ### EDA
-```{r, echo=FALSE}
+```{r, echo=FALSE, warning=FALSE, results="hide" }
 # Dropping outliers for the purpose of EDA plots.
 q3 = quantile(mortality$mortality, 0.75)
 q1 = quantile(mortality$mortality, 0.25)
@@ -86,17 +86,16 @@ eda=mortality%>%
 ```
 #### Tableau
 
+--- INSERT TABLEAU SCREENSHOTS ---
 
-XXXtableau screenshotsXXX
+The visualizations above are captured from our tableau dashboard. The map depicts the **large variance in number of births and mortality rates across the different counties.** The largest counties, based on births, appear in lighter colors - they have relatively lower mortality rates, while we see darker colors, which are spikes in mortality rate, in many of those with smaller populations. From the bar charts, we also see that there are **substantially more white births** (382,602) than any other race, specifically, we have very few data points for American Indians and people that identify as Other Non-White. On the other hand, **the number of births in each year from 2011 to 2016 stays fairly constant**. 
 
-The visualizations above are captured from our tableau dashboard. The map depicts the *large variance in number of births and mortality rates across the different counties.* The largest counties, based on births, appear in lighter colors - they have relatively lower mortality rates, while we see darker colors, which are spikes in mortality rate, in many of those with smaller populations. From the bar charts, we also see that there are *substantially more white births* (382,602) than any other race, specifically, we have very few data points for American Indians and people that identify as Other Non-White. On the other hand, *the number of births in each year from 2011 to 2016 stays fairly constant*. 
+The high variance in births per county paired with the aforementioned variance in births by race, underscores **the need to share some, but not all, information at the county level and by race**. 
 
-The high variance in births per county paired with the aforementioned variance in births by race, underscores *the need to share some, but not all, information at the county level and by race*. 
-
-We also compare North Carolina versus National mortality rate trends throughout time by race. We note that the trend of White mortality rate in NC is largely similar to that on a National level. On the other hand, there are large divergences in American Indian mortality rates. While it has stayed relatively constant throughout the national level, there was a persistent rise in American Indian mortality rates throughout 2011 to 2013, then followed by a particularly sharp decline 2013 onwards. 
+We also compare North Carolina versus National mortality rate trends throughout time by race. We note that **the trend of White mortality rate in NC is largely similar to that on a National level**. On the other hand, there are **large divergences in American Indian mortality rates**. While it has stayed relatively constant throughout the national level, there was a persistent rise in American Indian mortality rates throughout 2011 to 2013, then followed by a particularly sharp decline 2013 onwards. 
 
 #### Exploring Categorical Variables
-```{r}
+```{r, warning=FALSE, fig.height=4, fig.width=9}
 ggplot(eda, aes(x = mortality, fill = race)) +
     geom_histogram(bins = 50) +
   scale_x_continuous(name="Mortality", limits=c(0, 50)) +
@@ -104,24 +103,27 @@ ggplot(eda, aes(x = mortality, fill = race)) +
 
 p2 <- ggplot(eda, aes(x=race, y=mortality)) + 
   geom_violin(trim=TRUE) 
-p2 + geom_boxplot(width=0.1) + ggtitle("Mortality Versus Race")
+vio1 = p2 + geom_boxplot(width=0.1) + ggtitle("Mortality Versus Race")
 
 eda$YOB <- as.factor(eda$YOB)
 p <- ggplot(eda, aes(x=YOB, y=mortality)) + 
   geom_violin(trim=TRUE) 
-p + geom_boxplot(width=0.1) + ggtitle("Mortality Versus Year Of Birth")
+vio2= p + geom_boxplot(width=0.1) + ggtitle("Mortality Versus Year Of Birth")
+
+grid.arrange(vio1, vio2, nrow = 1)
 ```
+</br>
 The above plots confirm several observations we were able to make in our tableau dashboard, while also providing additional visualizations on distributional information.
 
-The histogram again shows a significantly more ample amount of data points on White births compared to other races. In addition, we can particularly see that White births appear to be skewed towards aggregating on the left side of the x-axis on the histogram - where mortality rate is low. We can make a similar observation in the first violin plot, where the widths are particularly wide between a mortality rate of 0 and 10. Both these plots indicate that *White births generally contribute to lower mortality rates, whereas high mortality rates are mostly composed of births of races that are not White.*
+The histogram again shows a significantly more ample amount of data points on White births compared to other races. In addition, we can particularly see that White births appear to be skewed towards aggregating on the left side of the x-axis on the histogram - where mortality rate is low. We can make a similar observation in the first violin plot, where the widths are particularly wide between a mortality rate of 0 and 10. Both these plots indicate that **White births generally contribute to lower mortality rates, whereas high mortality rates are mostly composed of births of races that are not White**.
 
-The second violin plots show similar distributions of mortality rates across time. Here we can understand that *not only the number of births, but also mortality rates on an aggreggated basis within North Carolina throughout the years also do stay fairly consistent and have no notable swings.*
+The second violin plots show similar distributions of mortality rates across time. Here we can understand that **not only the number of births, but also mortality rates on an aggreggated basis within North Carolina throughout the years do stay fairly consistent and have no notable swings**.
 
 #### Exploring Numerical Continuous Variables
-```{r, echo=FALSE}
+```{r, echo=FALSE, fig.height=4, fig.width=9}
 #Median income
 cor1 = cor(eda$Median_Household_Income, eda$mortality)
-ggplot(eda)+
+s1 = ggplot(eda)+
   aes(x=Median_Household_Income,y=mortality)+
   geom_point()+
   geom_smooth(method=lm)+
@@ -130,12 +132,14 @@ ggplot(eda)+
 
 #Low birth weight
 cor2=cor(eda$pctLowBirthWeight,eda$mortality)
-ggplot(eda)+
+s2 = ggplot(eda)+
   aes(x=pctLowBirthWeight,y=mortality)+
   geom_point()+
   geom_smooth(method=lm)+
   theme_minimal()+
   labs(title="Percent Low Birth Weight v. Mortality Rate",y="Mortality Rate",x="Percent Low Birth Weight")
+
+grid.arrange(s1, s2, nrow = 1)
 
 #Percent Smoke
 cor3=cor(eda$pctSmokers,eda$mortality)
@@ -151,7 +155,7 @@ Median Household Income: There is a negative relationship between the median inc
 
 Percentage Low Bith Weight: There is a positive relationship between the percentage of births that had a low birth weight in a county and the mortality rate in that county. Specifically, the two variables have a positive correlation of `r cor2`. This suggests that counties with a higher percent of births that had a low birth weight tend to have higher mortatility rates.
 
-Percentage Smokers: -- fix percent smokers? -- 
+Percentage Smokers: -- fix percent smokers?? -- 
 
 
 ### Model Selection
