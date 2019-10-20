@@ -119,7 +119,9 @@ model = glmer(data = mortality, weights = births, formula = mortality_rate ~ (1|
 summary(model)
 plot_model(model)
 
+set_theme(axis.textsize.y = 0.3)
 plot_model(model, type = "re") 
+set_theme(axis.textsize.y = 1)
 plot_model(model, type = "est")
 ```
 These charts show the differing intercepts for the differing counties and races. 
@@ -141,6 +143,8 @@ The county level variability is 0.01728 and the race level variability is 0.1170
 
 ### Comparison
 ```{r, echo=FALSE, warning=FALSE}
+
+## create ROC curve
 mortality_fitted = mortality
 mortality_fitted$fitted.values = fitted(model)
 
@@ -153,7 +157,7 @@ expanded = mortality_fitted %>%
 
 roc(response = expanded$alive, predictor = expanded$fitted.values, plot = TRUE)
 
-
+###
 our_table = mortality_fitted %>%
   filter(YOB == 2015) %>%
   select(fitted.values, race, COUNTY) %>%
