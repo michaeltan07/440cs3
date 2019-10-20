@@ -33,11 +33,26 @@ demos = read.csv("Data/County_Demo_Data.csv")
 demos.clean = demos %>%
   mutate(COUNTY = toupper(COUNTY) %>% str_remove_all(" "))
 
+demos2016 = read.csv("Data/County_Demo_Data2016.csv")
+demos2016.clean = demos %>%
+  mutate(COUNTY = toupper(COUNTY) %>% str_remove_all(" "))
+mortality2016 = mortality %>%
+  filter(YOB == 2016)
+
+mortality2016 = merge(mortality2016 , demos2016.clean, by = "COUNTY")
+
+mortality2016 = mortality2016 %>%
+  mutate(mortality_rate = mortality / 1000, race = relevel(race, "White")) %>%
+  mutate(Median_Household_Income = Median_Household_Income / 1000)
+
 mortality = merge(mortality , demos.clean, by = "COUNTY")
 
 mortality = mortality %>%
   mutate(mortality_rate = mortality / 1000, race = relevel(race, "White")) %>%
   mutate(Median_Household_Income = Median_Household_Income / 1000)
+
+mortality = mortality %>%
+  filter(YOB != 2016)
 ```
 
 ```{r, echo=FALSE}
@@ -115,14 +130,36 @@ We chose to use a logit model as it aptly bounds the outcome variable (the morta
 
 model = glmer(data = mortality, weights = births, formula = mortality_rate ~ (1|COUNTY) + (1|race) + Median_Household_Income + pctLowBirthWeight + pctSmokers, family = binomial())
 
+model_racefixed = glmer(data = mortality, weights = births, formula = mortality_rate ~ (1|COUNTY) + race + Median_Household_Income + pctLowBirthWeight + pctSmokers, family = binomial())
+
+model_barebones = glmer(data = mortality, weights = births, formula = mortality_rate ~ (1|COUNTY) + (1|race), family = binomial())
+
+
+# expanded_mortality = mortality %>%
+#   mutate(live = births - deaths) %>%
+#   gather("type", "quantity", c(6, 16)) %>%
+#   mutate(alive = as.numeric(type == "live")) %>%
+#   uncount(quantity)
+# 
+# model_bayesian = brm(data = expanded_mortality, formula = alive ~ (1|COUNTY) + (1|race) + Median_Household_Income + pctLowBirthWeight + pctSmokers, family = binomial())
 
 summary(model)
+summary(model_racefixed)
+summary(model_barebones)
 plot_model(model)
 
 set_theme(axis.textsize.y = 0.3)
 plot_model(model, type = "re") 
 set_theme(axis.textsize.y = 1)
 plot_model(model, type = "est")
+
+# summary(model_bayesian)
+# plot_model(model_bayesian)
+# 
+# set_theme(axis.textsize.y = 0.3)
+# plot_model(model_bayesian, type = "re") 
+# set_theme(axis.textsize.y = 1)
+# plot_model(model_bayesian, type = "est")
 ```
 These charts show the differing intercepts for the differing counties and races. 
 
@@ -146,18 +183,27 @@ The county level variability is 0.01728 and the race level variability is 0.1170
 
 ## create ROC curve
 mortality_fitted = mortality
-mortality_fitted$fitted.values = fitted(model)
+mortality_fitted$fitted = fitted(model)
+mortality_fitted$fitted_barebones = fitted(model_barebones)
+mortality_fitted$fitted_racefixed = fitted(model_racefixed)
+
 
 expanded = mortality_fitted %>%
+  select(-births, -deaths) %>%
+  merge(mortality2016 %>% select(COUNTY, race, births, deaths), by = c("COUNTY", "race")) %>%
   mutate(live = births - deaths) %>%
-  select(deaths, live, fitted.values) %>%
+  select(deaths, live, fitted, fitted_barebones, fitted_racefixed) %>%
   gather("type", "quantity", 1:2) %>%
   mutate(alive = as.numeric(type == "live")) %>%
   uncount(quantity)
 
-roc(response = expanded$alive, predictor = expanded$fitted.values, plot = TRUE)
+roc(response = expanded$alive, predictor = expanded$fitted, plot = FALSE)
+roc(response = expanded$alive, predictor = expanded$fitted_barebones, plot = FALSE)
+roc(response = expanded$alive, predictor = expanded$fitted_racefixed, plot = FALSE)
 
-###
+```
+
+```{r}
 our_table = mortality_fitted %>%
   filter(YOB == 2015) %>%
   select(fitted.values, race, COUNTY) %>%
