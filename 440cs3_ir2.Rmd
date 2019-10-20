@@ -15,6 +15,7 @@ library(tidyr)
 library(lme4)
 library(sjPlot)
 library(brms)
+library(pROC)
 
 select = dplyr::select
 ```
@@ -32,11 +33,26 @@ demos = read.csv("Data/County_Demo_Data.csv")
 demos.clean = demos %>%
   mutate(COUNTY = toupper(COUNTY) %>% str_remove_all(" "))
 
+demos2016 = read.csv("Data/County_Demo_Data2016.csv")
+demos2016.clean = demos %>%
+  mutate(COUNTY = toupper(COUNTY) %>% str_remove_all(" "))
+mortality2016 = mortality %>%
+  filter(YOB == 2016)
+
+mortality2016 = merge(mortality2016 , demos2016.clean, by = "COUNTY")
+
+mortality2016 = mortality2016 %>%
+  mutate(mortality_rate = mortality / 1000, race = relevel(race, "White")) %>%
+  mutate(Median_Household_Income = Median_Household_Income / 1000)
+
 mortality = merge(mortality , demos.clean, by = "COUNTY")
 
 mortality = mortality %>%
   mutate(mortality_rate = mortality / 1000, race = relevel(race, "White")) %>%
   mutate(Median_Household_Income = Median_Household_Income / 1000)
+
+mortality = mortality %>%
+  filter(YOB != 2016)
 ```
 
 ```{r, echo=FALSE}
@@ -69,6 +85,7 @@ eda=mortality%>%
   select(-mortality_rate)
 ```
 #### Tableau
+
 
 XXXtableau screenshotsXXX
 
@@ -146,18 +163,45 @@ We chose to use a logit model as it aptly bounds the outcome variable (the morta
 
 model = glmer(data = mortality, weights = births, formula = mortality_rate ~ (1|COUNTY) + (1|race) + Median_Household_Income + pctLowBirthWeight + pctSmokers, family = binomial())
 
+model_racefixed = glmer(data = mortality, weights = births, formula = mortality_rate ~ (1|COUNTY) + race + Median_Household_Income + pctLowBirthWeight + pctSmokers, family = binomial())
+
+model_barebones = glmer(data = mortality, weights = births, formula = mortality_rate ~ (1|COUNTY) + (1|race), family = binomial())
+
+model_barebones_fixed = glmer(data = mortality, weights = births, formula = mortality_rate ~ (1|COUNTY) + race, family = binomial())
+
+
+# expanded_mortality = mortality %>%
+#   mutate(live = births - deaths) %>%
+#   gather("type", "quantity", c(6, 16)) %>%
+#   mutate(alive = as.numeric(type == "live")) %>%
+#   uncount(quantity)
+# 
+# model_bayesian = brm(data = expanded_mortality, formula = alive ~ (1|COUNTY) + (1|race) + Median_Household_Income + pctLowBirthWeight + pctSmokers, family = binomial())
+
 summary(model)
+summary(model_racefixed)
+summary(model_barebones)
 plot_model(model)
 
 set_theme(axis.textsize.y = 0.3)
 plot_model(model, type = "re") 
 set_theme(axis.textsize.y = 1)
 plot_model(model, type = "est")
+
+# summary(model_bayesian)
+# plot_model(model_bayesian)
+# 
+# set_theme(axis.textsize.y = 0.3)
+# plot_model(model_bayesian, type = "re") 
+# set_theme(axis.textsize.y = 1)
+# plot_model(model_bayesian, type = "est")
 ```
 These charts show the differing intercepts for the differing counties and races. 
 
 ### Model Interpretations
 The model revealed the following statistically significant effects:
+
+[TODO: update with fixed effect for race, see if numbers change]
 
 For a given county, race, and percentage of births in a county that have low birth weight, a one thousand dollar increase in median household income leads to 0.975x the probability of mortality (changed by a multiplicative factor of e^-0.025122  = 0.975).
 
@@ -171,24 +215,48 @@ In addition, we see that holding all else constant, we predict American Indian�
 
 The county level variability is 0.01728 and the race level variability is 0.11702.
 
-### Comparison
+### Comparison of Models
 ```{r, echo=FALSE, warning=FALSE}
+
+## create ROC curve
 mortality_fitted = mortality
-mortality_fitted$fitted.values = fitted(model)
+mortality_fitted$fitted = fitted(model)
+mortality_fitted$fitted_barebones = fitted(model_barebones)
+mortality_fitted$fitted_racefixed = fitted(model_racefixed)
+mortality_fitted$fitted_barebones_fixed = fitted(model_barebones_fixed)
 
 
+expanded = mortality_fitted %>%
+  select(-births, -deaths) %>%
+  merge(mortality2016 %>% select(COUNTY, race, births, deaths), by = c("COUNTY", "race")) %>%
+  mutate(live = births - deaths) %>%
+  select(deaths, live, fitted, fitted_barebones, fitted_racefixed, fitted_barebones_fixed) %>%
+  gather("type", "quantity", 1:2) %>%
+  mutate(alive = as.numeric(type == "live")) %>%
+  uncount(quantity)
+
+roc(response = expanded$alive, predictor = expanded$fitted, plot = FALSE)
+roc(response = expanded$alive, predictor = expanded$fitted_barebones, plot = FALSE)
+roc(response = expanded$alive, predictor = expanded$fitted_racefixed, plot = FALSE)
+roc(response = expanded$alive, predictor = expanded$fitted_barebones_fixed, plot = FALSE)
+anova(model, model_barebones, model_racefixed, model_barebones_fixed)
+
+
+```
+
+```{r}
 our_table = mortality_fitted %>%
   filter(YOB == 2015) %>%
-  select(fitted.values, race, COUNTY) %>%
-  mutate(predicted_mortality = 1000*fitted.values) %>%
-  select(-fitted.values) %>%
+  select(fitted_racefixed, race, COUNTY) %>%
+  mutate(predicted_mortality = 1000*fitted_racefixed) %>%
+  select(-fitted_racefixed) %>%
   spread(race, predicted_mortality)
 
 
 our_table_as_list = mortality_fitted %>%
-  select(COUNTY, race, fitted.values) %>%
-  mutate(predicted_mortality = 1000*fitted.values) %>%
-  select(-fitted.values)
+  select(COUNTY, race, fitted_racefixed) %>%
+  mutate(predicted_mortality = 1000*fitted_racefixed) %>%
+  select(-fitted_racefixed)
 
 schs_table_as_list = SCHS_Table_2015 %>%
   gather(race, mortality, 2:length(SCHS_Table_2015)) %>%
@@ -227,9 +295,29 @@ Zooming into the chart (chart 2 is on a smaller scale), it seems that predicted 
 ### Discussion of Differences
 XXXtableau screenshot
 
+[TODO: reword, less focus on SCHS]
+
 Our table of predicted mortality was pretty close to the table given by the 2015 NC Infant Mortality Report. For all counties except for Gates (23 births observed), Alleghany (22 births observed), Pamlico (30 births observed), Hyde (22 births observed), and Avery (24 births observed), the absolute difference between predicted and actual is less than 16. These aforementioned counties with absolute differences greater than 16 all have a very low number of births observed. The graph "Difference in Predicted vs Reported Mortalities" vs "Number of Births" also shows this trend. The model is much less accurate when number of births is low. As number of births gets higher (past about 500 births observed), the difference becomes very small (<~10). This makes sense, as there is less data to train the model on if there are fewer births observed. Of note is that there are about 30 counties where the difference was less than 1.
 
 These charts suggest that SCHS puts too much weight on the sample mean of counties where there are relatively few data points. We urge the SCHS to change their practices and use pooling in order to get a more realistic estimate amidst counties with large deviations. For example, simply looking at Gates county, we see a standard deviation of ~272 across the three years of mortality data(mortality rate given 1000 births). This variance can be handled using pooling in which one weights the credibility of the sample mean by the total number of births. 
 
 Furthermore, we strongly urge the SCHS to include the features, percent smokers, median household income, and percent low birth weight in their model. These features help further eliminate variance and improve upon our predictions of mortality rates. These features all have been shown to have strong correlations with mortality rates and help us further account for county level differences beyond simply the sample estimates. They provide a systematic way to categorize/understand the mortality rates at the county level.
 
+
+```{r, include=FALSE, eval=FALSE}
+mortality_summary = mortality %>%
+  group_by(race, YOB) %>%
+  summarize("numbirths" = sum(births), "numdeaths" = sum(deaths)) %>%
+  ungroup()
+
+mortality_summary = mortality_summary %>%
+  mutate(rate = 1000*numdeaths / numbirths) %>%
+  rename(Year = YOB)
+
+national_summary = read.csv("National Mortality Data.csv") %>%
+  rename(race=Race)
+
+summaries = merge(mortality_summary, national_summary, by = c("Year", "race"))
+
+write.csv(summaries, "summaries_by_race.csv")
+```
