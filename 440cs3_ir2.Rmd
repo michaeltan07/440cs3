@@ -154,7 +154,7 @@ Percentage Low Bith Weight: There is a positive relationship between the percent
 Percentage Low Bith Weight: There is a positive relationship between the percentage of people that smoke in a county and the mortality rate in that county. Specifically, the two variables have a positive correlation of `r cor3`. This suggests that counties with a higher percent of smokers tend to have higher mortatility rates.
 
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, results="hide"}
 
 
 model = glmer(data = mortality, weights = births, formula = mortality_rate ~ (1|COUNTY) + (1|race) + Median_Household_Income + pctLowBirthWeight + pctSmokers, family = binomial())
@@ -210,7 +210,7 @@ In addition, we see that holding all else constant, we predict American Indianâ€
 The county level variability is 0.01728 and the race level variability is 0.11702.
 
 ### Comparison of Models
-```{r, echo=FALSE, warning=FALSE}
+```{r, echo=FALSE, warning=FALSE,results="hide"}
 
 ## create ROC curve
 mortality_fitted = mortality
