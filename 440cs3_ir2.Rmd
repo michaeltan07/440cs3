@@ -145,14 +145,16 @@ ggplot(eda)+
   geom_point()+
   geom_smooth(method=lm)+
   theme_minimal()+
-  labs(title="Percent Smokers v. Mortality Rate",y="Mortality Rate",x="Percent Smokers")
+  labs(title="Percent of Residents that Smoke v. Mortality Rate",y="Mortality Rate",x="Percent of Residents that Smoke")
 ```
 Median Household Income: There is a negative relationship between the median income of a county and the mortality rate in that county. Specifically, the two variables have a negative correlation of `r cor1`. This suggests that counties with higher median income tend to have lower mortatility rates.
 
 Percentage Low Bith Weight: There is a positive relationship between the percentage of births that had a low birth weight in a county and the mortality rate in that county. Specifically, the two variables have a positive correlation of `r cor2`. This suggests that counties with a higher percent of births that had a low birth weight tend to have higher mortatility rates.
 
+Percentage Low Bith Weight: There is a positive relationship between the percentage of people that smoke in a county and the mortality rate in that county. Specifically, the two variables have a positive correlation of `r cor3`. This suggests that counties with a higher percent of smokers tend to have higher mortatility rates.
 
-```{r, echo=FALSE}
+
+```{r, echo=FALSE, results="hide"}
 
 
 model = glmer(data = mortality, weights = births, formula = mortality_rate ~ (1|COUNTY) + (1|race) + Median_Household_Income + pctLowBirthWeight + pctSmokers, family = binomial())
@@ -208,7 +210,7 @@ In addition, we see that holding all else constant, we predict American Indianâ€
 The county level variability is 0.01728 and the race level variability is 0.11702.
 
 ### Comparison of Models
-```{r, echo=FALSE, warning=FALSE}
+```{r, echo=FALSE, warning=FALSE,results="hide"}
 
 ## create ROC curve
 mortality_fitted = mortality
@@ -235,6 +237,32 @@ anova(model, model_barebones, model_racefixed, model_barebones_fixed)
 
 mortality_fitted = mortality_fitted %>% rename(fitted.values = fitted_racefixed)
 ```
+
+![](model_selection.png)
+
+Models:
+
+
+
+Model 1: mortality_rate ~ (1 | COUNTY) + (1 | race) + Median_Household_Income + pctLowBirthWeight + pctSmokers
+
+
+
+Model 2: mortality_rate ~ (1 | COUNTY) + (1 | race) 
+
+
+
+Model 3: mortality_rate ~ (1 | COUNTY) + race + Median_Household_Income + model_racefixed:     pctLowBirthWeight + pctSmokers 
+
+
+
+Model 4: mortality_rate ~ (1 | COUNTY) + race 
+
+
+We trained four separate models on the 2011-2015 data and then tested on the 2016 data. We used three statistics to assess model fit/accuracy: AIC, BIC, and AUC. All four models use random effects at the county level, but differ in how they model race and whether or not they make use of the additional features: median income, smoking, and low birth weight. Models 1 and 2 use a random effect to model race, while 3 and 4 use a fixed effect. Models 1 and 3 make use of the additional features, while 2 and 4 do not. 
+
+We found that AUC was fairly similar across the four models, but was slightly higher for models 3 and 4 which treat race as a fixed effect, suggesting this may help prevent overfitting. We also saw that AIC and BIC were slightly lower for the models that make use of the additional features, suggesting better fit. Because of the low AIC and BIC combined with a high AUC, we chose to move forward with model 3, treating tace as a fixed effect and keeping the additional features.
+
 
 ```{r}
 our_table = mortality_fitted %>%
