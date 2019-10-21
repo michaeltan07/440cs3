@@ -3,8 +3,8 @@ title: "440 CS3 IR2"
 author: "Jake Epstein, Man-Lin Hsiao, Sahil Patel, Daniel Spotiswood, & Michael Tan"
 date: "10/16/2019"
 output:
-  word_document: default
   html_document: default
+  word_document: default
 ---
 
 ```{r, echo=FALSE, message=FALSE}
@@ -150,7 +150,8 @@ s3 = ggplot(eda)+
 
 grid.arrange(s1, s2, s3, nrow = 1)
 ```
-As shown in the scatterplots above, there is a negative relationship between mortality rate with median household income (correlation of `r cor1`) as well as percentage of smokers (correlation of  `r cor3`). On the other hand, there is a positive relationship between the percentage of births that had a low birth weight in a county and the mortality rate in that county (correlation of `r cor3`). These relationships suggest a possibility of incorporating these factors as appropriate predictors in our model.  
+</br>
+As shown in the scatterplots above, there is a positive relationship between mortality rate with percentage of smokers (correlation of `r cor3`) as well as percentage of births that had a low birth weight (correlation of  `r cor2`). On the other hand, there is a negative relationship between the  median household income and the mortality rate in that county (correlation of `r cor1`). These relationships suggest a possibility of incorporating these factors as appropriate predictors in our model.  
 
 
 ```{r, echo=FALSE}
