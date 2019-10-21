@@ -69,7 +69,7 @@ SCHS_Table_2015 = mortality %>%
   spread(race, mortality)
 ```
 ### Introduction
-This case study aims to obtain robust estimates for mortality rates by race across North Carolina counties based on 2011-2016 mortality data from the North Carolina Center for Health Statistics. We supplemented this data with health and demographic data from a study performed by the Robert Wood Johnson Foundation. We explored correlations between mortality rate and percent insured, median household income, percent low birth weight, percent obese, and percent smokers. Through EDA and model fitting, we narrowed these features down and created a model that predict mortality rates by race and county, utilizing percent low birth weight, percent smokers, and median household income. 
+This case study aims to obtain robust estimates for mortality rates by race and year across North Carolina counties based on 2011-2016 mortality data from the North Carolina Center for Health Statistics. We supplemented this data with health and demographic data from a study performed by the Robert Wood Johnson Foundation. We explored correlations between mortality rate and percent insured, median household income, percent low birth weight, percent obese, and percent smokers. Through EDA and model fitting, we narrowed these features down and created a model that predict mortality rates by race, year and county, utilizing percent low birth weight, percent smokers, and median household income. We then comment on trends by group over time and compare those trends to the national averages
 
 
 ### Exploratory Data Analysis
@@ -89,15 +89,15 @@ eda=mortality%>%
 ```
 #### Initial Visualization
 
---- TABLEAU 1 ---
+[TODO: Add Tableau Screenshot]
 
 The visualizations above are captured from our tableau dashboard. The map depicts the **large variance in number of births and mortality rates across the different counties.** The largest counties, based on births, appear in lighter colors - they have relatively lower mortality rates, while we see darker colors, which are spikes in mortality rate, in many of those with smaller populations. This variation in mortality rates is likely the result of smaller sample sizes in these counties, but higher mortality rates in small counties could possibly be attributed to differences in medical resources in these areas. From the bar charts, we also see that there are **substantially more white births** (382,602) than any other race, specifically, we have very few data points for American Indians and people that identify as other non-white. On the other hand, **the overall mortality rate for each year from 2011 to 2016 stays fairly constant**. 
 
 The high variance in births per county paired with the aforementioned variance in births by race, underscores **the need to share some, but not all, information at the county level and by race**. 
 
---- TABLEAU 2 ---- 
+<!-- --- TABLEAU 2 ----  -->
 
-We also compare North Carolina versus national mortality rate trends throughout time by race. We note that **the trend of white mortality rate in NC is largely similar to that on a national level**. On the other hand, there are **large divergences in American Indian mortality rates**. While it has stayed relatively constant throughout the national level, there was a persistent rise in American Indian mortality rates throughout 2011 to 2013, then followed by a particularly sharp decline 2013 onwards. These divergences are likely a result of the small number of American Indians in the data set. 
+<!-- We also compare North Carolina versus national mortality rate trends throughout time by race. We note that **the trend of white mortality rate in NC is largely similar to that on a national level**. On the other hand, there are **large divergences in American Indian mortality rates**. While it has stayed relatively constant throughout the national level, there was a persistent rise in American Indian mortality rates throughout 2011 to 2013, then followed by a particularly sharp decline 2013 onwards. These divergences are likely a result of the small number of American Indians in the data set.  -->
 
 #### Exploring Categorical Variables
 ```{r, echo=FALSE, warning=FALSE, fig.height=4, fig.width=9}
@@ -165,17 +165,18 @@ ggplot(eda)+
 
 ### Model Selection
 ```{r, echo=FALSE, warning=FALSE, results="hide", quiet = TRUE}
+mortality$YOB = as.factor(mortality$YOB)
 
+model = glmer(data = mortality, weights = births, formula = mortality_rate ~ (1|COUNTY) + (1|race) + YOB + Median_Household_Income + pctLowBirthWeight + pctSmokers, family = binomial())
 
-model = glmer(data = mortality, weights = births, formula = mortality_rate ~ (1|COUNTY) + (1|race) + Median_Household_Income + pctLowBirthWeight + pctSmokers, family = binomial())
+model_racefixed = glmer(data = mortality, weights = births, formula = mortality_rate ~ (1|COUNTY) + race + YOB + Median_Household_Income + pctLowBirthWeight + pctSmokers, family = binomial())
 
-model_racefixed = glmer(data = mortality, weights = births, formula = mortality_rate ~ (1|COUNTY) + race + Median_Household_Income + pctLowBirthWeight + pctSmokers, family = binomial())
+model_barebones = glmer(data = mortality, weights = births, formula = mortality_rate ~ (1|COUNTY) + (1|race) + YOB, family = binomial())
 
-model_barebones = glmer(data = mortality, weights = births, formula = mortality_rate ~ (1|COUNTY) + (1|race), family = binomial())
+model_barebones_fixed = glmer(data = mortality, weights = births, formula = mortality_rate ~ (1|COUNTY) + race + YOB, family = binomial())
+```
 
-model_barebones_fixed = glmer(data = mortality, weights = births, formula = mortality_rate ~ (1|COUNTY) + race, family = binomial())
-
-
+```{r, include = FALSE, echo = FALSE}
 # expanded_mortality = mortality %>%
 #   mutate(live = births - deaths) %>%
 #   gather("type", "quantity", c(6, 16)) %>%
@@ -197,7 +198,7 @@ model_barebones_fixed = glmer(data = mortality, weights = births, formula = mort
 
 
 
-```{r, echo=FALSE, warning=FALSE,results="hide"}
+```{r, echo=FALSE, message=FALSE, warning=FALSE,results="hide"}
 
 ## create ROC curve
 mortality_fitted = mortality
@@ -227,46 +228,47 @@ mortality_fitted = mortality_fitted %>% rename(fitted.values = fitted_racefixed)
 
 ![](model_selection.png)
 
-Models:
+[TODO: Update model comparison numbers (shouldn't change much, only difference was including year)]
+
+**Model 1**: Mortality Rate ~ (1 | County) + (1 | Race) + Year + Median Household Income + Percent Low Birthweight + Percent Smokers
 
 
 
-Model 1: mortality_rate ~ (1 | COUNTY) + (1 | race) + Median_Household_Income + pctLowBirthWeight + pctSmokers
+**Model 2**: Mortality Rate ~ (1 | County) + (1 | Race) + Year
 
 
 
-Model 2: mortality_rate ~ (1 | COUNTY) + (1 | race) 
+**Model 3**: Mortality Rate ~ (1 | County) + Race + Year + Median Household Income + Percent Low Birthweight + Percent Smokers
 
 
 
-Model 3: mortality_rate ~ (1 | COUNTY) + race + Median_Household_Income + model_racefixed:     pctLowBirthWeight + pctSmokers 
+**Model 4**: Mortality Race ~ (1 | County) + Race + Year 
 
 
+We trained four separate models on the 2011-2015 data and then tested on the 2016 data. We used three statistics to assess model fit/accuracy: AIC, BIC, and AUC, which are shown above. All four models use random effects at the county level, but differ in how they model race and whether or not they make use of the additional features: median income, smoking, and low birth weight. Models 1 and 2 use a random effect to model race, while 3 and 4 use a fixed effect. Models 1 and 3 make use of the additional features, while 2 and 4 do not. 
 
-Model 4: mortality_rate ~ (1 | COUNTY) + race 
-
-
-We trained four separate models on the 2011-2015 data and then tested on the 2016 data. We used three statistics to assess model fit/accuracy: AIC, BIC, and AUC. All four models use random effects at the county level, but differ in how they model race and whether or not they make use of the additional features: median income, smoking, and low birth weight. Models 1 and 2 use a random effect to model race, while 3 and 4 use a fixed effect. Models 1 and 3 make use of the additional features, while 2 and 4 do not. 
-
-We found that AUC was fairly similar across the four models, but was slightly higher for models 3 and 4 which treat race as a fixed effect, suggesting this may help prevent overfitting. We also saw that AIC and BIC were slightly lower for the models that make use of the additional features, suggesting better fit. Because of the low AIC and BIC combined with a high AUC, we chose to move forward with model 3, treating tace as a fixed effect and keeping the additional features.
+We found that AUC was fairly similar across the four models, but was slightly higher for models 3 and 4 which treat race as a fixed effect, suggesting this may help prevent overfitting. We also saw that AIC and BIC were slightly lower for the models that make use of the additional features, suggesting better fit. Because of the low AIC and BIC combined with a high AUC, we chose to move forward with model 3, treating race as a fixed effect and keeping the additional features.
 
 
 ### Model Interpretation
+[TODO: change this from a plot_model to a nice latex table with the coefficients. Should take up a lot less space and ]
 
 ```{r, echo=FALSE, warning=FALSE, results="hide", quiet = TRUE}
 summary(model)
 summary(model_racefixed)
 summary(model_barebones)
-plot_model(model)
 
+#probably dont want to include these plots below
 set_theme(axis.textsize.y = 0.3)
-plot_model(model, type = "re") 
+plot_model(model, type = "re")
 set_theme(axis.textsize.y = 1)
 plot_model(model, type = "est")
 ```
 
 
 The model revealed the following statistically significant effects:
+
+[TODO: Update numbers, mention year]
 
 For a given county, race, and percentage of births in a county that have low birth weight, a one thousand dollar increase in median household income leads to 0.975x the probability of mortality (changed by a multiplicative factor of e^-0.025122  = 0.975).
 
@@ -282,7 +284,7 @@ The county level variability is 0.01728 and the race level variability is 0.1170
 
 
 
-```{r, echo =FALSE, warning = FALSE}
+```{r, echo =FALSE, warning = FALSE, fig.height=4, fig.width=9}
 our_table = mortality_fitted %>%
   filter(YOB == 2015) %>%
   select(fitted.values, race, COUNTY) %>%
@@ -311,7 +313,7 @@ comparisons = comparisons %>%
 
 write.csv(comparisons, "comparisons.csv")
 
-ggplot(comparisons, aes(x = predicted_mortality, y = mortality)) +
+pred1 = ggplot(comparisons, aes(x = predicted_mortality, y = mortality)) +
   geom_point() +
   ylim(c(0, 100)) +
   geom_abline(slope = 1, intercept = 0) +
@@ -319,13 +321,18 @@ ggplot(comparisons, aes(x = predicted_mortality, y = mortality)) +
   ylab ("Reported Values") +
   theme_minimal()
 
-ggplot(comparisons, aes(x = births, y = difference)) +
+pred2 = ggplot(comparisons, aes(x = births, y = difference)) +
   geom_point() +
   ylim(c(-10, 100)) +
   xlab("Number of Births") +
   ylab("Difference in Predicted vs Reported Mortalities") +
   theme_minimal()
 
+grid.arrange(pred1, pred2, nrow = 1)
+```
+
+
+```{r, echo = FALSE, include = FALSE}
 ggplot(comparisons, aes(x = Median_Household_Income, y = difference)) +
   geom_point() +
   ylim(c(0, 100)) +
@@ -345,12 +352,30 @@ ggplot(comparisons, aes(x = pctSmokers, y = difference)) +
   ylab ("Residual") +
   theme_minimal()
 ```
+[TODO: shift the focus of this section-- it seems like we're saying that we're trying to predict the sample estimates NCHS uses, but in reality we want to talk more about how our predictions shrink the sample estimates in a robust way]
+
 From the first chart, we see that our predictions do a strong job of estimating the reported values, and are centered around a slope of 1 (where predicted mortality rates equal reported mortality rates), so there is no clear bias.
 
 Zooming into the chart (chart 2 is on a smaller scale), it seems that predicted mortality rates are most accurate when they are low, but become more inconsistent when they are larger. These large residual points are mostly indicative of reported values that draw on a small quantity of data points. We should also note that there are some points that lie outside of this graph, but again are mostly caused by a lack of data. This is demonstrated in the third chart that shows that as the number of births increase our predictions converge with the sample means. There is larger variance along the y-axis with points nearer to the left hand side of the x-axis (sample size is small). On the other hand, points nearer the right hand side (sample size is large) of the x-axis are consistently closely aligned to 0. Therefore, As the sample size increases, the difference in the predicted mortality rate versus reported mortality rate of that county converges to zero.
 
-### Discussion of Differences
-XXXtableau screenshot
+### Conclusion and Trends
+```{r, include = FALSE, eval = FALSE}
+trends = mortality_fitted %>%
+  select(COUNTY, race, YOB, births, fitted) %>%
+  group_by(race, YOB) %>%
+  summarize("NC_Mortality_Rate" = 1000* sum(births * fitted) / sum(births)) %>%
+  rename(Race=race, Year = YOB)
+
+national = read.csv("National Mortality Data.csv")
+
+trends_merged = merge(trends, national, by = c("Race", "Year"))
+
+write.csv(trends_merged, "National_vs_NC_Trends.csv")
+```
+
+[TODO: add tableau screenshot 3]
+
+[shift analysis towards trends, comparison with U.S. data, away from NCHS]
 
 Our table of predicted mortality was pretty close to the table given by the 2015 NC Infant Mortality Report. For all counties except for Gates (23 births observed), Alleghany (22 births observed), Pamlico (30 births observed), Hyde (22 births observed), and Avery (24 births observed), the absolute difference between predicted and actual is less than 16. These aforementioned counties with absolute differences greater than 16 all have a very low number of births observed. The graph "Difference in Predicted vs Reported Mortalities" vs "Number of Births" also shows this trend. The model is much less accurate when number of births is low. As number of births gets higher (past about 500 births observed), the difference becomes very small (<~10). This makes sense, as there is less data to train the model on if there are fewer births observed. Of note is that there are about 30 counties where the difference was less than 1.
 
