@@ -104,7 +104,7 @@ The high variance in births per county paired with the aforementioned variance i
 ggplot(eda, aes(x = mortality, fill = race)) +
     geom_density(alpha = .5) +
   scale_x_continuous(name="Mortality", limits=c(0, 50)) +
-  ggtitle("Histogram of Mortality by Race") +
+  ggtitle("Distributions of Mortality by Race") +
   theme_minimal()
 
 
@@ -124,44 +124,43 @@ grid.arrange(vio1, vio2, nrow = 1)
 </br>
 The above plots confirm several observations we were able to make in our tableau dashboard, while also providing additional visualizations on distributional information.
 
-The histogram again shows a significantly more white births than other races. In addition, we can particularly see that white births appear to be skewed towards aggregating on the left side of the x-axis on the histogram - where mortality rate is low. We can make a similar observation in the first violin plot, where the widths are particularly wide between a mortality rate of 0 and 10. Both these plots indicate that **white births generally contribute to lower mortality rates, whereas high mortality rates are mostly composed of births of races that are not white**.
+The distribution plot of mortality by race again shows a significantly more white births than other races. In addition, we can particularly see that white births appear to be skewed towards aggregating on the left side of the x-axis on the plot - where mortality rate is low. We can make a similar observation in the first violin plot, where the widths are particularly wide between a mortality rate of 0 and 10. Both these plots indicate that **white births generally contribute to lower mortality rates, whereas high mortality rates are mostly composed of births of races that are not white**.
 
 The second violin plots show similar distributions of mortality rates across time. Here we can understand that **not only the number of births, but also mortality rates on an aggreggated basis within North Carolina throughout the years do stay fairly consistent and have no notable swings**.
 
 #### Exploring Numerical Continuous Variables
-```{r, echo=FALSE, fig.height=4, fig.width=9}
+```{r, echo=FALSE, fig.height=4, fig.width=12}
 #Median income
-cor1 = cor(eda$Median_Household_Income, eda$mortality) %>%round(3)
+cor1 = cor(eda$Median_Household_Income, eda$mortality)
 s1 = ggplot(eda)+
   aes(x=Median_Household_Income,y=mortality)+
   geom_point()+
   geom_smooth(method=lm)+
   theme_minimal()+
   labs(title="Median Household Income v. Mortality Rate",y="Mortality Rate",x="Median Household Income")
+
 #Low birth weight
-cor2=cor(eda$pctLowBirthWeight,eda$mortality)%>%round(3)
+cor2=cor(eda$pctLowBirthWeight,eda$mortality)
 s2 = ggplot(eda)+
   aes(x=pctLowBirthWeight,y=mortality)+
   geom_point()+
   geom_smooth(method=lm)+
   theme_minimal()+
   labs(title="Percent Low Birth Weight v. Mortality Rate",y="Mortality Rate",x="Percent Low Birth Weight")
-grid.arrange(s1, s2, nrow = 1)
+
 #Percent Smoke
-cor3=cor(eda$pctSmokers,eda$mortality)%>%round(3)
-ggplot(eda)+
+cor3=cor(eda$pctSmokers,eda$mortality)
+s3 = ggplot(eda)+
   aes(x=pctSmokers,y=mortality)+
   geom_point()+
   geom_smooth(method=lm)+
   theme_minimal()+
-  labs(title="Percent of Residents that Smoke v. Mortality Rate",y="Mortality Rate",x="Percent of Residents that Smoke")
+  labs(title="Percent Smokers v. Mortality Rate",y="Mortality Rate",x="Percent Smokers")
+
+grid.arrange(s1, s2, s3, nrow = 1)
 ```
-**Median Household Income**: There is a negative relationship between the median income of a county and the mortality rate in that county. Specifically, the two variables have a negative correlation of `r cor1`. This suggests that counties with higher median income tend to have lower mortatility rates.
-
-**Percent Low Bith Weight**: There is a positive relationship between the percentage of births that had a low birth weight in a county and the mortality rate in that county. Specifically, the two variables have a positive correlation of `r cor2`. This suggests that counties with a higher percent of births that had a low birth weight tend to have higher mortatility rates.
-
-**Percent Smokers**: There is a positive relationship between the percentage of people that smoke in a county and the mortality rate in that county. Specifically, the two variables have a positive correlation of `r cor3`. This suggests that counties with a higher percent of smokers tend to have higher mortatility rates.
-
+</br>
+As shown in the scatterplots above, there is a positive relationship between mortality rate with percentage of smokers (correlation of `r cor3`) as well as percentage of births that had a low birth weight (correlation of  `r cor2`). On the other hand, there is a negative relationship between the  median household income and the mortality rate in that county (correlation of `r cor1`). These relationships suggest a possibility of incorporating these factors as appropriate predictors in our model.  
 
 ### Model Selection
 ```{r, echo=FALSE, warning=FALSE, results="hide", quiet = TRUE}
