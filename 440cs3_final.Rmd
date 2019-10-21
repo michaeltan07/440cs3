@@ -184,15 +184,7 @@ model_barebones_fixed = glmer(data = mortality, weights = births, formula = mort
 # 
 # model_bayesian = brm(data = expanded_mortality, formula = alive ~ (1|COUNTY) + (1|race) + Median_Household_Income + pctLowBirthWeight + pctSmokers, family = binomial())
 
-summary(model)
-summary(model_racefixed)
-summary(model_barebones)
-plot_model(model)
 
-set_theme(axis.textsize.y = 0.3)
-plot_model(model, type = "re") 
-set_theme(axis.textsize.y = 1)
-plot_model(model, type = "est")
 
 # summary(model_bayesian)
 # plot_model(model_bayesian)
@@ -202,24 +194,9 @@ plot_model(model, type = "est")
 # set_theme(axis.textsize.y = 1)
 # plot_model(model_bayesian, type = "est")
 ```
-These charts show the differing intercepts for the differing counties and races. 
 
-### Model Interpretations
-The model revealed the following statistically significant effects:
 
-For a given county, race, and percentage of births in a county that have low birth weight, a one thousand dollar increase in median household income leads to 0.975x the probability of mortality (changed by a multiplicative factor of e^-0.025122  = 0.975).
 
-The explanation of this seems intuitive. It could be the case that becoming wealthier leads to being able to afford better obstetrics (birthing and pregnancy) services, which would lead to a decreased probability of a baby dying.
-
-For a given county, race, and median household income in a county, a one percent increase in the percentage of births that have low birth weight leads to 0.954x the probability of mortality (changed by a multiplicative factor of e^-0.046546  = 0.954).
-
-The explanation of this seems counterintuitive. It could be the case that families that know they will have a baby with low birth weight (mothers that know they will give birth early) will prepare for such a situation by picking a higher-quality obstetrics service, which would lead to a decreased probability of a baby dying.
-
-In addition, we see that holding all else constant, we predict American Indian’s and African American’s to experience the largest mortality rate, while we predict whites to experience the least.
-
-The county level variability is 0.01728 and the race level variability is 0.11702.
-
-### Comparison of Models
 ```{r, echo=FALSE, warning=FALSE,results="hide"}
 
 ## create ROC curve
@@ -272,6 +249,37 @@ Model 4: mortality_rate ~ (1 | COUNTY) + race
 We trained four separate models on the 2011-2015 data and then tested on the 2016 data. We used three statistics to assess model fit/accuracy: AIC, BIC, and AUC. All four models use random effects at the county level, but differ in how they model race and whether or not they make use of the additional features: median income, smoking, and low birth weight. Models 1 and 2 use a random effect to model race, while 3 and 4 use a fixed effect. Models 1 and 3 make use of the additional features, while 2 and 4 do not. 
 
 We found that AUC was fairly similar across the four models, but was slightly higher for models 3 and 4 which treat race as a fixed effect, suggesting this may help prevent overfitting. We also saw that AIC and BIC were slightly lower for the models that make use of the additional features, suggesting better fit. Because of the low AIC and BIC combined with a high AUC, we chose to move forward with model 3, treating tace as a fixed effect and keeping the additional features.
+
+
+### Model Interpretation
+
+```{r, echo=FALSE, warning=FALSE, results="hide", quiet = TRUE}
+summary(model)
+summary(model_racefixed)
+summary(model_barebones)
+plot_model(model)
+
+set_theme(axis.textsize.y = 0.3)
+plot_model(model, type = "re") 
+set_theme(axis.textsize.y = 1)
+plot_model(model, type = "est")
+```
+
+
+The model revealed the following statistically significant effects:
+
+For a given county, race, and percentage of births in a county that have low birth weight, a one thousand dollar increase in median household income leads to 0.975x the probability of mortality (changed by a multiplicative factor of e^-0.025122  = 0.975).
+
+The explanation of this seems intuitive. It could be the case that becoming wealthier leads to being able to afford better obstetrics (birthing and pregnancy) services, which would lead to a decreased probability of a baby dying.
+
+For a given county, race, and median household income in a county, a one percent increase in the percentage of births that have low birth weight leads to 0.954x the probability of mortality (changed by a multiplicative factor of e^-0.046546  = 0.954).
+
+The explanation of this seems counterintuitive. It could be the case that families that know they will have a baby with low birth weight (mothers that know they will give birth early) will prepare for such a situation by picking a higher-quality obstetrics service, which would lead to a decreased probability of a baby dying.
+
+In addition, we see that holding all else constant, we predict American Indian’s and African American’s to experience the largest mortality rate, while we predict whites to experience the least.
+
+The county level variability is 0.01728 and the race level variability is 0.11702.
+
 
 
 ```{r, echo =FALSE, warning = FALSE}
