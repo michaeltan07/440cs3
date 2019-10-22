@@ -353,9 +353,10 @@ ggplot(comparisons, aes(x = pctSmokers, y = difference)) +
   ylab ("Residual") +
   theme_minimal()
 ```
-
+![](tableau_nchs_comparison.png)
 
 The first chart demonstrates the relationship between our predictions and the NCHS estimates (which are just the sample estimates for mortality). In general, the predictions are relatively similar, as the points are centered around a slope of 1 (where predicted mortality rates equal reported mortality rates); however, extreme values from the NCHS appear "shrunk" towards the mean. The second plot demonstrates this tendency further; counties with a small number of births tend to have large discrepancies between NCHS estimates and our estimates. Our estimates for counties with lots of data tend to converge to the sample mean.
+
 
 
 ### Conclusion and Trends
