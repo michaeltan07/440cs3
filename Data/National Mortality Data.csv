@@ -1,4 +1,4 @@
-﻿Year,Race,Deaths,Mortality Rate
+﻿Year,Race,Deaths,National Mortality Rate
 2008,American Indian,403,8.1
 2009,American Indian,385,7.9
 2010,American Indian,354,7.6
@@ -8,15 +8,15 @@
 2014,American Indian,360,8
 2015,American Indian,363,8.2
 2016,American Indian,347,8
-2008,Asian,949,3.7
-2009,Asian,898,3.6
-2010,Asian,877,3.6
-2011,Asian,880,3.5
-2012,Asian,907,3.3
-2013,Asian,877,3.3
-2014,Asian,896,3.2
-2015,Asian,969,3.4
-2016,Asian,1017,3.4
+2008,Other Non-White,949,3.7
+2009,Other Non-White,898,3.6
+2010,Other Non-White,877,3.6
+2011,Other Non-White,880,3.5
+2012,Other Non-White,907,3.3
+2013,Other Non-White,877,3.3
+2014,Other Non-White,896,3.2
+2015,Other Non-White,969,3.4
+2016,Other Non-White,1017,3.4
 2008,Black,8543,12.7
 2009,Black,8312,12.6
 2010,Black,7401,11.6
@@ -35,12 +35,12 @@
 2014,Hispanic,4772,5.2
 2015,Hispanic,4805,5.2
 2016,Hispanic,4817,5.2
-2008,Non-Hispanic White,12519,5.5
-2009,Non-Hispanic White,11608,5.2
-2010,Non-Hispanic White,11025,5.1
-2011,Non-Hispanic White,10842,5.1
-2012,Non-Hispanic White,10601,5
-2013,Non-Hispanic White,10563,5
-2014,Non-Hispanic White,10341,4.8
-2015,Non-Hispanic White,10277,4.8
-2016,Non-Hispanic White,10046,4.8
+2008,White,12519,5.5
+2009,White,11608,5.2
+2010,White,11025,5.1
+2011,White,10842,5.1
+2012,White,10601,5
+2013,White,10563,5
+2014,White,10341,4.8
+2015,White,10277,4.8
+2016,White,10046,4.8

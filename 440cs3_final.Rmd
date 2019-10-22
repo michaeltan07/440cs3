@@ -24,7 +24,7 @@ select = dplyr::select
 
 ```{r, echo=FALSE}
 #read in mortality
-mortality = read.csv("nc_infant_mortality.csv") %>%
+mortality = read.csv("Data/nc_infant_mortality.csv") %>%
   mutate(COUNTY = str_remove_all(COUNTY, " "))
 
  
@@ -90,7 +90,7 @@ eda=mortality%>%
 ```
 #### Initial Visualization
 
-![](tableau_screenshot_1.png)
+![](snippets/tableau_screenshot_1.png)
 
 
 The visualizations above are captured from our tableau dashboard. The map depicts the **large variance in number of births and mortality rates across the different counties.** The largest counties, based on births, appear in lighter colors - they have relatively lower mortality rates, while we see darker colors, which are spikes in mortality rate, in many of those with smaller populations. This variation in mortality rates is likely the result of smaller sample sizes in these counties, but higher mortality rates in small counties could possibly be attributed to differences in medical resources in these areas. From the bar charts, we also see that there are **substantially more white births** (382,602) than any other race, specifically, we have very few data points for American Indians and people that identify as other non-white. On the other hand, **the overall mortality rate for each year from 2011 to 2016 stays fairly constant**. 
@@ -227,7 +227,7 @@ anova(model, model_barebones, model_racefixed, model_barebones_fixed)
 mortality_fitted = mortality_fitted %>% rename(fitted.values = fitted_racefixed)
 ```
 
-![](model_selection.png)
+![](snippets/model_selection.png)
 
 **Model 1**: Mortality Rate ~ (1 | County) + (1 | Race) + Year + Median Household Income + Percent Low Birthweight + Percent Smokers
 
@@ -254,7 +254,7 @@ We found that AUC was fairly similar across the four models, but was slightly hi
 ```{r, echo=FALSE, warning=FALSE, results="hide", quiet = TRUE}
 summary(model)
 summary(model_racefixed)
-write.csv(summary(model_racefixed)$coefficients, "model_coefficients.csv")
+#write.csv(summary(model_racefixed)$coefficients, "model_coefficients.csv")
 summary(model_barebones)
 
 set_theme(axis.textsize.y = 0.3)
@@ -263,8 +263,8 @@ set_theme(axis.textsize.y = 1)
 plot_model(model_racefixed, type = "est")
 ```
 
-![](model_output.png)
-![](model_random_effects.png)
+![](snippets/model_output.png)
+![](snippets/model_random_effects.png)
 
 The model with race fixed revealed the following statistically significant effects:
 
@@ -313,7 +313,7 @@ comparisons = merge(comparisons, mortality %>% filter(YOB == 2015))
 comparisons = comparisons %>%
   mutate(difference = mortality - predicted_mortality)
 
-write.csv(comparisons, "comparisons.csv")
+write.csv(comparisons, "tableau/comparisons.csv")
 
 pred1 = ggplot(comparisons, aes(x = predicted_mortality, y = mortality)) +
   geom_point() +
@@ -353,7 +353,7 @@ ggplot(comparisons, aes(x = pctSmokers, y = difference)) +
   ylab ("Residual") +
   theme_minimal()
 ```
-![](tableau_nchs_comparison.png)
+![](snippets/tableau_nchs_comparison.png)
 
 The first chart demonstrates the relationship between our predictions and the NCHS estimates (which are just the sample estimates for mortality). In general, the predictions are relatively similar, as the points are centered around a slope of 1 (where predicted mortality rates equal reported mortality rates); however, extreme values from the NCHS appear "shrunk" towards the mean. The second plot demonstrates this tendency further; counties with a small number of births tend to have large discrepancies between NCHS estimates and our estimates. Our estimates for counties with lots of data tend to converge to the sample mean.
 
@@ -367,14 +367,14 @@ trends = mortality_fitted %>%
   summarize("NC_Mortality_Rate" = 1000* sum(births * fitted) / sum(births)) %>%
   rename(Race=race, Year = YOB)
 
-national = read.csv("National Mortality Data.csv")
+national = read.csv("Data/National Mortality Data.csv")
 
 trends_merged = merge(trends, national, by = c("Race", "Year"))
 
-write.csv(trends_merged, "National_vs_NC_Trends.csv")
+write.csv(trends_merged, "tableau/National_vs_NC_Trends.csv")
 ```
 
-![](tableau_3.png)
+![](snippets/tableau_3.png)
 
 
 In the above visualization, we compare our predictions by race and year to U.S. rates overall. We obtained this national data from the Centers for Disease Control and Prevention. As shown by our exploratory analysis and our model, year dpoes not have a significant relationship with infant mortality, and unsurprisingly there are no large directional trends in infant mortality for any racial group over time in North Carolina. This is consistent with what has been seen in the U.S. in a whole, as the mortality rate for each race has remained essentially constant over this time period.
