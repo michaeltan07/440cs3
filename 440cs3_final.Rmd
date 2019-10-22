@@ -3,8 +3,8 @@ title: "440 CS3 Final Report"
 author: "Jake Epstein, Man-Lin Hsiao, Sahil Patel, Daniel Spotiswood, & Michael Tan"
 date: "10/16/2019"
 output:
-  html_document: default
   word_document: default
+  html_document: default
 ---
 
 ```{r, echo=FALSE, message=FALSE}
@@ -258,7 +258,6 @@ summary(model_racefixed)
 write.csv(summary(model_racefixed)$coefficients, "model_coefficients.csv")
 summary(model_barebones)
 
-#probably dont want to include these plots below
 set_theme(axis.textsize.y = 0.3)
 plot_model(model, type = "re")
 set_theme(axis.textsize.y = 1)
