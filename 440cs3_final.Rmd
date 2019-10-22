@@ -69,7 +69,7 @@ SCHS_Table_2015 = mortality %>%
   spread(race, mortality)
 ```
 ### Introduction
-This case study aims to obtain robust estimates for mortality rates by race and year across North Carolina counties based on 2011-2016 mortality data from the North Carolina Center for Health Statistics. We supplemented this data with health and demographic data from a study performed by the Robert Wood Johnson Foundation. We explored correlations between mortality rate and percent insured, median household income, percent low birth weight, percent obese, and percent smokers. Through EDA and model fitting, we narrowed these features down and created a model that predict mortality rates by race, year and county, utilizing percent low birth weight, percent smokers, and median household income. We then comment on trends by group over time and compare those trends to the national averages
+This case study aims to obtain robust estimates for mortality rates by race and year across North Carolina counties based on 2011-2016 mortality data from the North Carolina Center for Health Statistics. We supplemented this data with health and demographic data from a study performed by the Robert Wood Johnson Foundation. We explored correlations between mortality rate and percent insured, median household income, percent low birth weight, percent obese, and percent smokers. Through EDA and model fitting, we narrowed these features down and created a model that predict mortality rates by race, year and county, utilizing percent low birth weight, percent smokers, and median household income. We then comment on trends by group over time and compare those trends to the national averages.
 
 
 ### Exploratory Data Analysis
@@ -89,7 +89,8 @@ eda=mortality%>%
 ```
 #### Initial Visualization
 
-[TODO: Add Tableau Screenshot]
+![](tableau_screenshot_1.png)
+
 
 The visualizations above are captured from our tableau dashboard. The map depicts the **large variance in number of births and mortality rates across the different counties.** The largest counties, based on births, appear in lighter colors - they have relatively lower mortality rates, while we see darker colors, which are spikes in mortality rate, in many of those with smaller populations. This variation in mortality rates is likely the result of smaller sample sizes in these counties, but higher mortality rates in small counties could possibly be attributed to differences in medical resources in these areas. From the bar charts, we also see that there are **substantially more white births** (382,602) than any other race, specifically, we have very few data points for American Indians and people that identify as other non-white. On the other hand, **the overall mortality rate for each year from 2011 to 2016 stays fairly constant**. 
 
@@ -250,20 +251,22 @@ We found that AUC was fairly similar across the four models, but was slightly hi
 
 
 ### Model Interpretation
-[TODO: change this from a plot_model to a nice latex table with the coefficients. Should take up a lot less space and ]
 
 ```{r, echo=FALSE, warning=FALSE, results="hide", quiet = TRUE}
 summary(model)
 summary(model_racefixed)
+write.csv(summary(model_racefixed)$coefficients, "model_coefficients.csv")
 summary(model_barebones)
 
 #probably dont want to include these plots below
 set_theme(axis.textsize.y = 0.3)
 plot_model(model, type = "re")
 set_theme(axis.textsize.y = 1)
-plot_model(model, type = "est")
+#plot_model(model, type = "est")
 ```
 
+![](model_output.png)
+![](model_random_effects.png)
 
 The model revealed the following statistically significant effects:
 
@@ -330,7 +333,7 @@ pred2 = ggplot(comparisons, aes(x = births, y = difference)) +
 grid.arrange(pred1, pred2, nrow = 1)
 ```
 
-
+### Comparison to NCHS Estimates
 ```{r, echo = FALSE, include = FALSE}
 ggplot(comparisons, aes(x = Median_Household_Income, y = difference)) +
   geom_point() +
@@ -372,13 +375,17 @@ trends_merged = merge(trends, national, by = c("Race", "Year"))
 write.csv(trends_merged, "National_vs_NC_Trends.csv")
 ```
 
-[TODO: add tableau screenshot 3]
+![](tableau_3.png)
 
-[shift analysis towards trends, comparison with U.S. data, away from NCHS]
 
-Our table of predicted mortality was pretty close to the table given by the 2015 NC Infant Mortality Report. For all counties except for Gates (23 births observed), Alleghany (22 births observed), Pamlico (30 births observed), Hyde (22 births observed), and Avery (24 births observed), the absolute difference between predicted and actual is less than 16. These aforementioned counties with absolute differences greater than 16 all have a very low number of births observed. The graph "Difference in Predicted vs Reported Mortalities" vs "Number of Births" also shows this trend. The model is much less accurate when number of births is low. As number of births gets higher (past about 500 births observed), the difference becomes very small (<~10). This makes sense, as there is less data to train the model on if there are fewer births observed. Of note is that there are about 30 counties where the difference was less than 1.
+In the above visualization, we compare our predictions by race and year to U.S. rates overall. We obtained this national data from the Centers for Disease Control and Prevention. As shown by our exploratory analysis and our model, year dpoes not have a significant relationship with infant mortality, and unsurprisingly there are no large directional trends in infant mortality for any racial group over time in North Carolina. This is consistent with what has been seen in the U.S. in a whole, as the mortality rate for each race has remained essentially constant over this time period.
 
-These charts suggest that SCHS puts too much weight on the sample mean of counties where there are relatively few data points. We urge the SCHS to change their practices and use pooling in order to get a more realistic estimate amidst counties with large deviations. For example, simply looking at Gates county, we see a standard deviation of ~272 across the three years of mortality data(mortality rate given 1000 births). This variance can be handled using pooling in which one weights the credibility of the sample mean by the total number of births. 
+Infant mortality rates in North Carolina are higher than those of the U.S. overall for every category of race. Our North Carolina estimates are relatively similar to those for the U.S. overall for white, black and hispanic populations, but our predictions diverge greatly in the other non-white category and the American Indian category. One possible explanations for this large divergence is the relatively small sample size of American Indian and other non-white individuals in our data in comparison to white individuals. Further research is advised to explore why North Carolina has experienced higher rates of infant mortality. One possible routes of exploration would be looking into differences in poverty rates and access to medical care across various states.
 
-Furthermore, we strongly urge the SCHS to include the features, percent smokers, median household income, and percent low birth weight in their model. These features help further eliminate variance and improve upon our predictions of mortality rates. These features all have been shown to have strong correlations with mortality rates and help us further account for county level differences beyond simply the sample estimates. They provide a systematic way to categorize/understand the mortality rates at the county level.
+
+<!-- Our table of predicted mortality was pretty close to the table given by the 2015 NC Infant Mortality Report. For all counties except for Gates (23 births observed), Alleghany (22 births observed), Pamlico (30 births observed), Hyde (22 births observed), and Avery (24 births observed), the absolute difference between predicted and actual is less than 16. These aforementioned counties with absolute differences greater than 16 all have a very low number of births observed. The graph "Difference in Predicted vs Reported Mortalities" vs "Number of Births" also shows this trend. The model is much less accurate when number of births is low. As number of births gets higher (past about 500 births observed), the difference becomes very small (<~10). This makes sense, as there is less data to train the model on if there are fewer births observed. Of note is that there are about 30 counties where the difference was less than 1. -->
+
+<!-- These charts suggest that SCHS puts too much weight on the sample mean of counties where there are relatively few data points. We urge the SCHS to change their practices and use pooling in order to get a more realistic estimate amidst counties with large deviations. For example, simply looking at Gates county, we see a standard deviation of ~272 across the three years of mortality data(mortality rate given 1000 births). This variance can be handled using pooling in which one weights the credibility of the sample mean by the total number of births.  -->
+
+<!-- Furthermore, we strongly urge the SCHS to include the features, percent smokers, median household income, and percent low birth weight in their model. These features help further eliminate variance and improve upon our predictions of mortality rates. These features all have been shown to have strong correlations with mortality rates and help us further account for county level differences beyond simply the sample estimates. They provide a systematic way to categorize/understand the mortality rates at the county level. -->
 
