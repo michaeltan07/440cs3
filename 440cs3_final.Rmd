@@ -1,8 +1,9 @@
 ---
 title: "440 CS3 Final Report"
 author: "Jake Epstein, Man-Lin Hsiao, Sahil Patel, Daniel Spotiswood, & Michael Tan"
-date: "10/16/2019"
+date: "10/22/2019"
 output:
+  pdf_document: default
   html_document: default
   word_document: default
 ---
@@ -228,8 +229,6 @@ mortality_fitted = mortality_fitted %>% rename(fitted.values = fitted_racefixed)
 
 ![](model_selection.png)
 
-[TODO: Update model comparison numbers (shouldn't change much, only difference was including year)]
-
 **Model 1**: Mortality Rate ~ (1 | County) + (1 | Race) + Year + Median Household Income + Percent Low Birthweight + Percent Smokers
 
 
@@ -268,21 +267,23 @@ set_theme(axis.textsize.y = 1)
 ![](model_output.png)
 ![](model_random_effects.png)
 
-The model revealed the following statistically significant effects:
+The model with race fixed revealed the following statistically significant effects:
 
-[TODO: Update numbers, mention year]
+For a given county, race, year of birth, percentage of births in a county that have low birth weight, and percentage of people in a county who are smokers, a one thousand dollar increase in median household income leads to 0.983x the probability of mortality (changed by a multiplicative factor of e^-0.0174654 = 0.983). This is a significant effect at a 0.001 significance-level.
 
-For a given county, race, and percentage of births in a county that have low birth weight, a one thousand dollar increase in median household income leads to 0.975x the probability of mortality (changed by a multiplicative factor of e^-0.025122  = 0.975).
+The explanation of this effect (median income) seems intuitive. It could be the case that becoming wealthier leads to being able to afford better obstetrics (birthing and pregnancy) services, which would lead to a decreased probability of a baby dying.
 
-The explanation of this seems intuitive. It could be the case that becoming wealthier leads to being able to afford better obstetrics (birthing and pregnancy) services, which would lead to a decreased probability of a baby dying.
+For a given county, race, year of birth, median household income in a county, and percentage of people in a county who are smokers, a one percent increase in the percentage of births that have low birth weight leads to 0.967x the probability of mortality (changed by a multiplicative factor of e^-0.0337263 = 0.967). This effect has a p-value of 0.093, and does not meet the signficance threshold of 0.05.
 
-For a given county, race, and median household income in a county, a one percent increase in the percentage of births that have low birth weight leads to 0.954x the probability of mortality (changed by a multiplicative factor of e^-0.046546  = 0.954).
+The explanation of this effect (% low birth weight) seems counterintuitive. It could be the case that families that know they will have a baby with low birth weight (mothers that know they will give birth early) will prepare for such a situation by picking a higher-quality obstetrics service, which would lead to a decreased probability of a baby dying. The effect is also not significant.
 
-The explanation of this seems counterintuitive. It could be the case that families that know they will have a baby with low birth weight (mothers that know they will give birth early) will prepare for such a situation by picking a higher-quality obstetrics service, which would lead to a decreased probability of a baby dying.
+For a given county, race, year of birth, median household income in a county, and percentage of births in a county that have low birth weight, a one percent increase in the percentage of people who are smokers leads to 1.019x the probability of mortality (changed by a multiplicative factor of e^0.0183569 = 1.019). This is a significant effect at a 0.001 significance-level.
 
-In addition, we see that holding all else constant, we predict American Indian’s and African American’s to experience the largest mortality rate, while we predict whites to experience the least.
+The explanation of this effect (% smokers) seems intuitive. Smoking is detrimental to health. It has scientifically been shown that smoking by a pregnant mother is especially bad for the unborn fetus.
 
-The county level variability is 0.01728 and the race level variability is 0.11702.
+In addition, we see that holding all else constant, we predict American Indian’s and African American’s to experience the largest mortality rate, while we predict whites to experience the least. For example, holding all else equal, an African American would experience a mortality rate that is 2.5 times that of a white person (e^0.9138114 = 2.5).
+
+The county level variability is 0.01127.
 
 
 
@@ -354,7 +355,7 @@ ggplot(comparisons, aes(x = pctSmokers, y = difference)) +
   ylab ("Residual") +
   theme_minimal()
 ```
-[TODO: shift the focus of this section-- it seems like we're saying that we're trying to predict the sample estimates NCHS uses, but in reality we want to talk more about how our predictions shrink the sample estimates in a robust way]
+[todo: shift the focus of this section-- it seems like we're saying that we're trying to predict the sample estimates NCHS uses, but in reality we want to talk more about how our predictions shrink the sample estimates in a robust way]
 
 From the first chart, we see that our predictions do a strong job of estimating the reported values, and are centered around a slope of 1 (where predicted mortality rates equal reported mortality rates), so there is no clear bias.
 
