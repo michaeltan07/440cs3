@@ -357,6 +357,7 @@ ggplot(comparisons, aes(x = pctSmokers, y = difference)) +
 
 The first chart demonstrates the relationship between our predictions and the NCHS estimates (which are just the sample estimates for mortality). In general, the predictions are relatively similar, as the points are centered around a slope of 1 (where predicted mortality rates equal reported mortality rates); however, extreme values from the NCHS appear "shrunk" towards the mean. The second plot demonstrates this tendency further; counties with a small number of births tend to have large discrepancies between NCHS estimates and our estimates. Our estimates for counties with lots of data tend to converge to the sample mean.
 
+The above tableau visualization further illustrates the impact of pooling (random effects) at the county level. The counties with smaller populations have high variance with regard to mortality rates in our sample data; however, in our model we see that this variance is reduced. The counties in which our model has vastly different predictions than the sample mean are those with very small birth quantities and high mortality rates, such as Avery, Hyde and Pamlico counties.
 
 
 ### Conclusion and Trends

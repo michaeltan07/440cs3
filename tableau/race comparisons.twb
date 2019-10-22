@@ -16,13 +16,13 @@
       <connection class='federated'>
         <named-connections>
           <named-connection caption='summaries_by_race' name='textscan.0mdkbpl17i7lwv1eqjz560wlmih2'>
-            <connection class='textscan' directory='/Users/jakeepstein/Documents/Duke/Senior/Sta 440/440cs3' filename='summaries_by_race.csv' password='' server='' />
+            <connection class='textscan' directory='/Users/jakeepstein/Documents/Duke/Senior/Sta 440/440cs3/tableau' filename='National_vs_NC_Trends.csv' password='' server='' />
           </named-connection>
           <named-connection caption='National_vs_NC_Trends' name='textscan.1wwyisy1rk7igg16uq2a006k1iqg'>
             <connection class='textscan' directory='/Users/jakeepstein/Documents/Duke/Senior/Sta 440/440cs3' filename='National_vs_NC_Trends.csv' password='' server='' />
           </named-connection>
         </named-connections>
-        <relation connection='textscan.1wwyisy1rk7igg16uq2a006k1iqg' name='National_vs_NC_Trends.csv' table='[National_vs_NC_Trends#csv]' type='table'>
+        <relation connection='textscan.0mdkbpl17i7lwv1eqjz560wlmih2' name='National_vs_NC_Trends.csv' table='[National_vs_NC_Trends#csv]' type='table'>
           <columns character-set='UTF-8' header='yes' locale='en_US' separator=','>
             <column datatype='integer' name='F1' ordinal='0' />
             <column datatype='string' name='Race' ordinal='1' />
@@ -130,7 +130,7 @@
       <column caption='Year' datatype='integer' name='[Year]' role='dimension' type='quantitative' />
       <column-instance column='[NC Mortality Rate]' derivation='Sum' name='[sum:NC Mortality Rate:qk]' pivot='key' type='quantitative' />
       <column-instance column='[National Mortality Rate]' derivation='Sum' name='[sum:National Mortality Rate:qk]' pivot='key' type='quantitative' />
-      <layout dim-ordering='alphabetic' dim-percentage='0.419355' measure-ordering='alphabetic' measure-percentage='0.580645' show-structure='true' />
+      <layout dim-ordering='alphabetic' dim-percentage='0.466974' measure-ordering='alphabetic' measure-percentage='0.533026' show-structure='true' />
       <style>
         <style-rule element='mark'>
           <encoding attr='color' field='[:Measure Names]' type='palette'>
@@ -257,8 +257,8 @@
         <devicelayout auto-generated='true' name='Phone'>
           <size maxheight='700' minheight='700' sizing-mode='vscroll' />
           <zones>
-            <zone h='100000' id='13' type='layout-basic' w='100000' x='0' y='0'>
-              <zone h='98000' id='14' param='vert' type='layout-flow' w='98400' x='800' y='1000'>
+            <zone h='100000' id='15' type='layout-basic' w='100000' x='0' y='0'>
+              <zone h='98000' id='16' param='vert' type='layout-flow' w='98400' x='800' y='1000'>
                 <zone fixed-size='280' h='98000' id='3' is-fixed='true' name='NC vs National' w='82400' x='800' y='1000'>
                   <zone-style>
                     <format attr='border-color' value='#000000' />
