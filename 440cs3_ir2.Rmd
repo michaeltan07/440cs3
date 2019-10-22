@@ -1,7 +1,7 @@
 ---
 title: "440 CS3 IR2"
-author: "Jake Epstein, Man-Lin Hsiao, Sahil Patel, Daniel Spotiswood, & Michael Tan"
-date: "10/16/2019"
+author: "Jake Epstein, Man-Lin Hsiao, Sahil Patel, Daniel Spottiswood, & Michael Tan"
+date: "10/22/2019"
 output:
   html_document: default
   word_document: default
